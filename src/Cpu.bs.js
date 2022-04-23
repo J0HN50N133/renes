@@ -140,11 +140,17 @@ function iny(cpu) {
   return update_zero_and_negative_flags(cpu, cpu.register_y);
 }
 
+function sta(cpu, mode) {
+  var addr = get_operand_address(cpu, mode);
+  return mem_write(cpu, addr, cpu.register_a);
+}
+
 function interpret(cpu, program) {
   cpu.pc = 0;
+  cpu.memory = program;
   var $$break = false;
   while(!$$break) {
-    var op = Caml_array.get(program, cpu.pc);
+    var op = Caml_array.get(cpu.memory, cpu.pc);
     cpu.pc = cpu.pc + 1 | 0;
     if (op !== 0) {
       if (op >= 201) {
@@ -236,11 +242,132 @@ function interpret(cpu, program) {
 }
 
 function load(cpu, program) {
-  cpu.pc = 128;
+  cpu.pc = 32768;
   for(var x = 0 ,x_finish = program.length; x < x_finish; ++x){
     Caml_array.set(cpu.memory, 32768 + x | 0, Caml_array.get(program, x));
   }
+  return mem_write(cpu, 65532, 32768);
+}
+
+function run(cpu) {
+  var $$break = false;
+  while(!$$break) {
+    var op = Caml_array.get(cpu.memory, cpu.pc);
+    cpu.pc = cpu.pc + 1 | 0;
+    if (op >= 134) {
+      if (op >= 201) {
+        if (op !== 232) {
+          
+        } else {
+          inx(cpu);
+        }
+      } else if (op >= 149) {
+        switch (op) {
+          case 149 :
+              sta(cpu, /* ZeroPage_X */2);
+              cpu.pc = cpu.pc + 1 | 0;
+              break;
+          case 161 :
+              lda(cpu, /* Indirect_X */7);
+              cpu.pc = cpu.pc + 1 | 0;
+              break;
+          case 165 :
+              lda(cpu, /* ZeroPage */1);
+              cpu.pc = cpu.pc + 1 | 0;
+              break;
+          case 169 :
+              lda(cpu, /* Immediate */0);
+              cpu.pc = cpu.pc + 1 | 0;
+              break;
+          case 170 :
+              tax(cpu);
+              break;
+          case 173 :
+              lda(cpu, /* Absolute */4);
+              cpu.pc = cpu.pc + 2 | 0;
+              break;
+          case 177 :
+              lda(cpu, /* Indirect_Y */8);
+              cpu.pc = cpu.pc + 1 | 0;
+              break;
+          case 181 :
+              lda(cpu, /* ZeroPage_X */2);
+              cpu.pc = cpu.pc + 1 | 0;
+              break;
+          case 185 :
+              lda(cpu, /* Absolute_Y */6);
+              cpu.pc = cpu.pc + 2 | 0;
+              break;
+          case 189 :
+              lda(cpu, /* Absolute_X */5);
+              cpu.pc = cpu.pc + 2 | 0;
+              break;
+          case 150 :
+          case 151 :
+          case 152 :
+          case 153 :
+          case 154 :
+          case 155 :
+          case 156 :
+          case 157 :
+          case 158 :
+          case 159 :
+          case 160 :
+          case 162 :
+          case 163 :
+          case 164 :
+          case 166 :
+          case 167 :
+          case 168 :
+          case 171 :
+          case 172 :
+          case 174 :
+          case 175 :
+          case 176 :
+          case 178 :
+          case 179 :
+          case 180 :
+          case 182 :
+          case 183 :
+          case 184 :
+          case 186 :
+          case 187 :
+          case 188 :
+          case 190 :
+          case 191 :
+          case 192 :
+          case 193 :
+          case 194 :
+          case 195 :
+          case 196 :
+          case 197 :
+          case 198 :
+          case 199 :
+              break;
+          case 200 :
+              iny(cpu);
+              break;
+          
+        }
+      }
+      
+    } else if (op !== 0) {
+      if (op >= 133) {
+        sta(cpu, /* ZeroPage */1);
+        cpu.pc = cpu.pc + 1 | 0;
+      }
+      
+    } else {
+      $$break = true;
+    }
+  };
   
+}
+
+function load_and_run(cpu, program) {
+  load(cpu, program);
+  reset(cpu);
+  return run(cpu);
 }
 
 exports.UnSupportedAddressingMode = UnSupportedAddressingMode;
@@ -260,6 +387,9 @@ exports.lda = lda;
 exports.tax = tax;
 exports.inx = inx;
 exports.iny = iny;
+exports.sta = sta;
 exports.interpret = interpret;
 exports.load = load;
+exports.run = run;
+exports.load_and_run = load_and_run;
 /* No side effect */

@@ -48,6 +48,7 @@ let mem_read_2bytes = (cpu, addr) => {
   let hi = mem_read(cpu, addr + 1)
   lor(lsl(hi, 8), lo)
 }
+/* mem_write: write [data] to the [addr] of [cpu]'s memory */
 let mem_write = (cpu, addr, data) => cpu.memory[addr] = data
 let mem_write_2bytes = (cpu, addr, data) => {
   let hi = lsr(data, 8)
@@ -147,11 +148,16 @@ let iny = cpu => {
   cpu.register_y = update_overflow_flag_and_prune_result(cpu, cpu.register_y)
   update_zero_and_negative_flags(cpu, cpu.register_y)
 }
+let sta = (cpu, mode) => {
+  let addr = get_operand_address(cpu, mode)
+  mem_write(cpu, addr, cpu.register_a)
+}
 let interpret = (cpu, program) => {
   cpu.pc = 0
+  cpu.memory = program
   let break = ref(false)
   while !break.contents {
-    let op = program[cpu.pc]
+    let op = mem_read(cpu, cpu.pc)
     cpu.pc = cpu.pc + 1
     switch op {
     | 0x00 => break := true
@@ -195,15 +201,65 @@ let interpret = (cpu, program) => {
   }
 }
 let load = (cpu, program) => {
-  cpu.pc = 0x80
+  cpu.pc = 0x8000
   for x in 0 to Belt.Array.length(program) - 1 {
     cpu.memory[0x8000 + x] = program[x]
   }
+  mem_write(cpu, 0xFFFC, 0x8000)
 }
-/*
 let run = cpu => {
   let break = ref(false)
   while !break.contents {
+    let op = mem_read(cpu, cpu.pc)
+    cpu.pc = cpu.pc + 1
+
+    switch op {
+    | 0x00 => break := true
+    | 0xA9 => {
+        lda(cpu, Immediate)
+        cpu.pc = cpu.pc + 1
+      }
+    | 0xA5 => {
+        lda(cpu, ZeroPage)
+        cpu.pc = cpu.pc + 1
+      }
+    | 0xB5 => {
+        lda(cpu, ZeroPage_X)
+        cpu.pc = cpu.pc + 1
+      }
+    | 0xAD => {
+        lda(cpu, Absolute)
+        cpu.pc = cpu.pc + 2
+      }
+    | 0xBD => {
+        lda(cpu, Absolute_X)
+        cpu.pc = cpu.pc + 2
+      }
+    | 0xB9 => {
+        lda(cpu, Absolute_Y)
+        cpu.pc = cpu.pc + 2
+      }
+    | 0xA1 => {
+        lda(cpu, Indirect_X)
+        cpu.pc = cpu.pc + 1
+      }
+    | 0xB1 => {
+        lda(cpu, Indirect_Y)
+        cpu.pc = cpu.pc + 1
+      }
+    | 0xAA => tax(cpu)
+    | 0xE8 => inx(cpu)
+    | 0xC8 => iny(cpu)
+    | 0x85 => {
+        sta(cpu, ZeroPage)
+        cpu.pc = cpu.pc + 1
+      }
+    | 0x95 => {
+        sta(cpu, ZeroPage_X)
+        cpu.pc = cpu.pc + 1
+      }
+    | _ => ()
+    }
   }
 }
 let load_and_run = (cpu, program) => {
@@ -211,4 +267,3 @@ let load_and_run = (cpu, program) => {
   reset(cpu)
   run(cpu)
 }
-*/
