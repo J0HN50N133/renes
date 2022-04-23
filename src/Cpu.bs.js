@@ -40,11 +40,20 @@ function mem_write_2bytes(cpu, addr, data) {
   return mem_write(cpu, addr + 1 | 0, hi);
 }
 
-function update_zero_and_negative_flags(cpu, result) {
+function update_zero_flag(cpu, result) {
   cpu.status = result !== 0 ? cpu.status & 253 : cpu.status | 2;
+  
+}
+
+function update_negative_flag(cpu, result) {
   var match = result & 128;
   cpu.status = match !== 0 ? cpu.status | 128 : cpu.status & 127;
   
+}
+
+function update_zero_and_negative_flags(cpu, result) {
+  update_zero_flag(cpu, result);
+  return update_negative_flag(cpu, result);
 }
 
 function update_overflow_flag_and_prune_result(cpu, result) {
@@ -269,6 +278,8 @@ exports.mem_read = mem_read;
 exports.mem_read_2bytes = mem_read_2bytes;
 exports.mem_write = mem_write;
 exports.mem_write_2bytes = mem_write_2bytes;
+exports.update_zero_flag = update_zero_flag;
+exports.update_negative_flag = update_negative_flag;
 exports.update_zero_and_negative_flags = update_zero_and_negative_flags;
 exports.update_overflow_flag_and_prune_result = update_overflow_flag_and_prune_result;
 exports.reset = reset;

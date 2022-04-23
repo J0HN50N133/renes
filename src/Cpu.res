@@ -44,15 +44,21 @@ let mem_write_2bytes = (cpu, addr, data) => {
   mem_write(cpu, addr, lo)
   mem_write(cpu, addr + 1, hi)
 }
-let update_zero_and_negative_flags = (cpu, result) => {
+let update_zero_flag = (cpu, result) => {
   cpu.status = switch result {
   | 0 => lor(cpu.status, 0b0000_0010)
   | _ => land(cpu.status, 0b1111_1101)
   }
+}
+let update_negative_flag = (cpu, result) => {
   cpu.status = switch land(result, 0b1000_0000) {
   | 0 => land(cpu.status, 0b0111_1111)
   | _ => lor(cpu.status, 0b1000_0000)
   }
+}
+let update_zero_and_negative_flags = (cpu, result) => {
+  update_zero_flag(cpu, result)
+  update_negative_flag(cpu, result)
 }
 let update_overflow_flag_and_prune_result = (cpu, result) => {
   cpu.status = switch result {
