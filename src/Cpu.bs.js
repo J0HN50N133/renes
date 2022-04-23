@@ -3,6 +3,14 @@
 
 var Caml_array = require("rescript/lib/js/caml_array.js");
 
+function $$new(param) {
+  return {
+          register_a: 0,
+          status: 0,
+          pc: 0
+        };
+}
+
 function interpret(cpu, program) {
   cpu.register_a = 0;
   cpu.status = 0;
@@ -12,22 +20,14 @@ function interpret(cpu, program) {
     var op = Caml_array.get(program, cpu.pc);
     cpu.pc = cpu.pc + 1 | 0;
     if (op !== 0) {
-      if (op !== 169) {
-        throw {
-              RE_EXN_ID: "Match_failure",
-              _1: [
-                "Cpu.res",
-                15,
-                4
-              ],
-              Error: new Error()
-            };
+      if (op === 169) {
+        var param = Caml_array.get(program, cpu.pc);
+        cpu.pc = cpu.pc + 1 | 0;
+        cpu.register_a = param;
+        cpu.status = cpu.register_a === 0 ? cpu.status | 2 : cpu.status & 253;
+        cpu.status = (cpu.register_a & 128) !== 0 ? cpu.status | 128 : cpu.status & 127;
       }
-      var param = Caml_array.get(program, cpu.pc);
-      cpu.pc = cpu.pc + 1 | 0;
-      cpu.register_a = param;
-      cpu.status = cpu.register_a === 0 ? cpu.status | 2 : cpu.status & 253;
-      cpu.status = (cpu.register_a & 128) !== 0 ? cpu.status | 128 : cpu.status & 127;
+      
     } else {
       $$break = true;
     }
@@ -35,5 +35,6 @@ function interpret(cpu, program) {
   
 }
 
+exports.$$new = $$new;
 exports.interpret = interpret;
 /* No side effect */

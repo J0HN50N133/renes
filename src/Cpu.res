@@ -3,7 +3,13 @@ type cpu = {
   mutable status: int,
   mutable pc: int,
 }
-
+let new = () => {
+  {
+    register_a: 0,
+    status: 0,
+    pc: 0,
+  }
+}
 let interpret = (cpu, program) => {
   cpu.register_a = 0
   cpu.status = 0
@@ -29,6 +35,7 @@ let interpret = (cpu, program) => {
           land(cpu.status, 0b0111_1111)
         }
       }
+    | _ => ()
     }
   }
 }
