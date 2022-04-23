@@ -3,6 +3,7 @@
 
 var Cpu = require("../src/Cpu.bs.js");
 var Jest = require("@glennsl/rescript-jest/src/jest.bs.js");
+var Curry = require("rescript/lib/js/curry.js");
 
 Jest.describe("test_0xa9_lda_immidiate_load_data", (function (param) {
         var cpu = Cpu.$$new(undefined);
@@ -19,6 +20,56 @@ Jest.describe("test_0xa9_lda_immidiate_load_data", (function (param) {
               }));
         return Jest.test("cpu_status_flag_7", (function (param) {
                       return Jest.Expect.toBe(Jest.Expect.expect(cpu.status & 128), 0);
+                    }));
+      }));
+
+Jest.describe("test_0xa9_lda_zero_flag", (function (param) {
+        var cpu = Cpu.$$new(undefined);
+        Cpu.interpret(cpu, [
+              169,
+              0,
+              0
+            ]);
+        return Jest.test("cpu_status", (function (param) {
+                      return Jest.Expect.toBe(Jest.Expect.expect(cpu.status & 2), 2);
+                    }));
+      }));
+
+Jest.describe("test_0xaa_tax_move_a_to_x", (function (param) {
+        var cpu = Cpu.$$new(undefined);
+        cpu.register_a = 10;
+        Cpu.interpret(cpu, [
+              170,
+              0
+            ]);
+        return Jest.test("register_x", (function (param) {
+                      return Jest.Expect.toBe(Jest.Expect.expect(cpu.register_x), 10);
+                    }));
+      }));
+
+Jest.describe("test_5_ops_workding_together", (function (param) {
+        var cpu = Cpu.$$new(undefined);
+        Cpu.interpret(cpu, [
+              169,
+              192,
+              170,
+              232,
+              0
+            ]);
+        return Jest.test("register_x", (function (param) {
+                      return Curry._2(Jest.Expect.Operators.$eq$eq, Jest.Expect.expect(cpu.register_x), 193);
+                    }));
+      }));
+
+Jest.describe("test_inx_overflow", (function (param) {
+        var cpu = Cpu.$$new(undefined);
+        Cpu.interpret(cpu, [
+              232,
+              232,
+              0
+            ]);
+        return Jest.test("register_x", (function (param) {
+                      return Curry._2(Jest.Expect.Operators.$eq$eq, Jest.Expect.expect(cpu.register_x), 1);
                     }));
       }));
 

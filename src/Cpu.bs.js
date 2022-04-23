@@ -6,9 +6,28 @@ var Caml_array = require("rescript/lib/js/caml_array.js");
 function $$new(param) {
   return {
           register_a: 0,
+          register_x: 0,
+          register_y: 0,
+          stack_pointer: 0,
           status: 0,
           pc: 0
         };
+}
+
+function update_zero_and_negative_flags(cpu, result) {
+  cpu.status = result === 0 ? cpu.status | 2 : cpu.status & 253;
+  cpu.status = (result & 128) === 0 ? cpu.status & 63 : cpu.status | 128;
+  
+}
+
+function lda(cpu, param) {
+  cpu.register_a = param;
+  return update_zero_and_negative_flags(cpu, cpu.register_a);
+}
+
+function tax(cpu) {
+  cpu.register_x = cpu.register_a;
+  return update_zero_and_negative_flags(cpu, cpu.register_x);
 }
 
 function interpret(cpu, program) {
@@ -19,22 +38,25 @@ function interpret(cpu, program) {
   while(!$$break) {
     var op = Caml_array.get(program, cpu.pc);
     cpu.pc = cpu.pc + 1 | 0;
-    if (op !== 0) {
-      if (op === 169) {
+    if (op === 170 || op === 169) {
+      if (op >= 170) {
+        tax(cpu);
+      } else {
         var param = Caml_array.get(program, cpu.pc);
         cpu.pc = cpu.pc + 1 | 0;
-        cpu.register_a = param;
-        cpu.status = cpu.register_a === 0 ? cpu.status | 2 : cpu.status & 253;
-        cpu.status = (cpu.register_a & 128) !== 0 ? cpu.status | 128 : cpu.status & 127;
+        lda(cpu, param);
       }
-      
-    } else {
+    } else if (op === 0) {
       $$break = true;
     }
+    
   };
   
 }
 
 exports.$$new = $$new;
+exports.update_zero_and_negative_flags = update_zero_and_negative_flags;
+exports.lda = lda;
+exports.tax = tax;
 exports.interpret = interpret;
 /* No side effect */
