@@ -16,6 +16,7 @@ type cpu = {
   mutable stack_pointer: int,
   mutable status: int,
   mutable pc: int,
+  mutable memory: array<int>,
 }
 
 let new = () => {
@@ -26,25 +27,25 @@ let new = () => {
     stack_pointer: 0,
     status: 0,
     pc: 0,
+    memory: Belt.Array.make(0xFFFF, 0),
   }
 }
+let mem_read = (cpu, addr) => cpu.memory[addr]
+let mem_write = (cpu, addr, data) => cpu.memory[addr] = data
 let update_zero_and_negative_flags = (cpu, result) => {
-  cpu.status = if result == 0 {
-    lor(cpu.status, 0b0000_0010)
-  } else {
-    land(cpu.status, 0b1111_1101)
+  cpu.status = switch result {
+  | 0 => lor(cpu.status, 0b0000_0010)
+  | _ => land(cpu.status, 0b1111_1101)
   }
-  cpu.status = if land(result, 0b1000_0000) == 0 {
-    land(cpu.status, 0b0111_1111)
-  } else {
-    lor(cpu.status, 0b1000_0000)
+  cpu.status = switch land(result, 0b1000_0000) {
+  | 0 => land(cpu.status, 0b0111_1111)
+  | _ => lor(cpu.status, 0b1000_0000)
   }
 }
 let update_overflow_flag_and_prune_result = (cpu, result) => {
-  cpu.status = if result > 0xff {
-    lor(cpu.status, 0b0100_0000)
-  } else {
-    land(cpu.status, 0b1011_1111)
+  cpu.status = switch result {
+  | _ if result > 0xff => lor(cpu.status, 0b0100_0000)
+  | _ => land(cpu.status, 0b1011_1111)
   }
   mod(result, 256)
 }
@@ -87,4 +88,14 @@ let interpret = (cpu, program) => {
     | _ => ()
     }
   }
+}
+let load = (cpu, program) => {
+  cpu.pc = 0x80
+  for x in 0 to Belt.Array.length(program) - 1 {
+    cpu.memory[0x8000 + x] = program[x]
+  }
+}
+let load_and_run = (cpu, program) => {
+  load(cpu, program)
+  // run(cpu)
 }
