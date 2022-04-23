@@ -16,8 +16,13 @@ function $$new(param) {
 
 function update_zero_and_negative_flags(cpu, result) {
   cpu.status = result === 0 ? cpu.status | 2 : cpu.status & 253;
-  cpu.status = (result & 128) === 0 ? cpu.status & 63 : cpu.status | 128;
+  cpu.status = (result & 128) === 0 ? cpu.status & 127 : cpu.status | 128;
   
+}
+
+function update_overflow_flag_and_prune_result(cpu, result) {
+  cpu.status = result > 255 ? cpu.status | 64 : cpu.status & 191;
+  return result % 256;
 }
 
 function lda(cpu, param) {
@@ -27,18 +32,39 @@ function lda(cpu, param) {
 
 function tax(cpu) {
   cpu.register_x = cpu.register_a;
+  console.log(cpu.register_x);
   return update_zero_and_negative_flags(cpu, cpu.register_x);
 }
 
+function inx(cpu) {
+  cpu.register_x = cpu.register_x + 1 | 0;
+  cpu.register_x = update_overflow_flag_and_prune_result(cpu, cpu.register_x);
+  return update_zero_and_negative_flags(cpu, cpu.register_x);
+}
+
+function iny(cpu) {
+  cpu.register_y = cpu.register_y + 1 | 0;
+  cpu.register_y = update_overflow_flag_and_prune_result(cpu, cpu.register_y);
+  return update_zero_and_negative_flags(cpu, cpu.register_y);
+}
+
 function interpret(cpu, program) {
-  cpu.register_a = 0;
-  cpu.status = 0;
   cpu.pc = 0;
   var $$break = false;
   while(!$$break) {
     var op = Caml_array.get(program, cpu.pc);
     cpu.pc = cpu.pc + 1 | 0;
-    if (op === 170 || op === 169) {
+    if (op >= 171) {
+      if (op !== 200) {
+        if (op !== 232) {
+          
+        } else {
+          inx(cpu);
+        }
+      } else {
+        iny(cpu);
+      }
+    } else if (op >= 169) {
       if (op >= 170) {
         tax(cpu);
       } else {
@@ -56,7 +82,10 @@ function interpret(cpu, program) {
 
 exports.$$new = $$new;
 exports.update_zero_and_negative_flags = update_zero_and_negative_flags;
+exports.update_overflow_flag_and_prune_result = update_overflow_flag_and_prune_result;
 exports.lda = lda;
 exports.tax = tax;
+exports.inx = inx;
+exports.iny = iny;
 exports.interpret = interpret;
 /* No side effect */

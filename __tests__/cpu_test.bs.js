@@ -63,6 +63,7 @@ Jest.describe("test_5_ops_workding_together", (function (param) {
 
 Jest.describe("test_inx_overflow", (function (param) {
         var cpu = Cpu.$$new(undefined);
+        cpu.register_x = 255;
         Cpu.interpret(cpu, [
               232,
               232,
@@ -70,6 +71,19 @@ Jest.describe("test_inx_overflow", (function (param) {
             ]);
         return Jest.test("register_x", (function (param) {
                       return Curry._2(Jest.Expect.Operators.$eq$eq, Jest.Expect.expect(cpu.register_x), 1);
+                    }));
+      }));
+
+Jest.describe("test_iny_overflow", (function (param) {
+        var cpu = Cpu.$$new(undefined);
+        cpu.register_y = 255;
+        Cpu.interpret(cpu, [
+              200,
+              200,
+              0
+            ]);
+        return Jest.test("register_x", (function (param) {
+                      return Curry._2(Jest.Expect.Operators.$eq$eq, Jest.Expect.expect(cpu.register_y), 1);
                     }));
       }));
 

@@ -35,10 +35,18 @@ let update_zero_and_negative_flags = (cpu, result) => {
     land(cpu.status, 0b1111_1101)
   }
   cpu.status = if land(result, 0b1000_0000) == 0 {
-    land(cpu.status, 0b0111_111)
+    land(cpu.status, 0b0111_1111)
   } else {
     lor(cpu.status, 0b1000_0000)
   }
+}
+let update_overflow_flag_and_prune_result = (cpu, result) => {
+  cpu.status = if result > 0xff {
+    lor(cpu.status, 0b0100_0000)
+  } else {
+    land(cpu.status, 0b1011_1111)
+  }
+  mod(result, 256)
 }
 
 let lda = (cpu, param) => {
@@ -47,12 +55,20 @@ let lda = (cpu, param) => {
 }
 let tax = cpu => {
   cpu.register_x = cpu.register_a
+  Js.log(cpu.register_x)
   update_zero_and_negative_flags(cpu, cpu.register_x)
 }
-
+let inx = cpu => {
+  cpu.register_x = cpu.register_x + 1
+  cpu.register_x = update_overflow_flag_and_prune_result(cpu, cpu.register_x)
+  update_zero_and_negative_flags(cpu, cpu.register_x)
+}
+let iny = cpu => {
+  cpu.register_y = cpu.register_y + 1
+  cpu.register_y = update_overflow_flag_and_prune_result(cpu, cpu.register_y)
+  update_zero_and_negative_flags(cpu, cpu.register_y)
+}
 let interpret = (cpu, program) => {
-  cpu.register_a = 0
-  cpu.status = 0
   cpu.pc = 0
   let break = ref(false)
   while !break.contents {
@@ -66,6 +82,8 @@ let interpret = (cpu, program) => {
         lda(cpu, param)
       }
     | 0xAA => tax(cpu)
+    | 0xE8 => inx(cpu)
+    | 0xC8 => iny(cpu)
     | _ => ()
     }
   }

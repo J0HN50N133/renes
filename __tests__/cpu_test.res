@@ -36,6 +36,16 @@ describe("test_inx_overflow", () => {
   open Expect
   open! Expect.Operators
   let cpu = Cpu.new()
+  cpu.register_x = 0xff
   Cpu.interpret(cpu, [0xe8, 0xe8, 0x00])
   test("register_x", () => expect(cpu.register_x) === 0x01)
+})
+
+describe("test_iny_overflow", () => {
+  open Expect
+  open! Expect.Operators
+  let cpu = Cpu.new()
+  cpu.register_y = 0xff
+  Cpu.interpret(cpu, [0xc8, 0xc8, 0x00])
+  test("register_x", () => expect(cpu.register_y) === 0x01)
 })
