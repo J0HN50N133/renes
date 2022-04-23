@@ -9,6 +9,7 @@
  * Z	Zero
  * C	Carry
  */
+open Instruction
 type cpu = {
   mutable register_a: int,
   mutable register_x: int,
@@ -18,19 +19,6 @@ type cpu = {
   mutable pc: int,
   mutable memory: array<int>,
 }
-exception UnSupportedAddressingMode
-type addressing_mode =
-  | Immediate
-  | ZeroPage
-  | ZeroPage_X
-  | ZeroPage_Y
-  | Absolute
-  | Absolute_X
-  | Absolute_Y
-  | Indirect_X
-  | Indirect_Y
-  | NoneAddressing
-
 let new = () => {
   {
     register_a: 0,
@@ -66,19 +54,19 @@ let update_zero_and_negative_flags = (cpu, result) => {
   | _ => lor(cpu.status, 0b1000_0000)
   }
 }
-let reset = cpu => {
-  cpu.register_a = 0
-  cpu.register_x = 0
-  cpu.status = 0
-
-  cpu.pc = mem_read_2bytes(cpu, 0xFFFC)
-}
 let update_overflow_flag_and_prune_result = (cpu, result) => {
   cpu.status = switch result {
   | _ if result > 0xff => lor(cpu.status, 0b0100_0000)
   | _ => land(cpu.status, 0b1011_1111)
   }
   mod(result, 256)
+}
+let reset = cpu => {
+  cpu.register_a = 0
+  cpu.register_x = 0
+  cpu.status = 0
+
+  cpu.pc = mem_read_2bytes(cpu, 0xFFFC)
 }
 let wrapping_add = (bits, a, b) => {
   mod(a + b, Js.Math.pow_float(~base=2., ~exp=bits->float_of_int)->int_of_float)
@@ -159,44 +147,25 @@ let interpret = (cpu, program) => {
   while !break.contents {
     let op = mem_read(cpu, cpu.pc)
     cpu.pc = cpu.pc + 1
-    switch op {
-    | 0x00 => break := true
-    | 0xA9 => {
-        lda(cpu, Immediate)
-        cpu.pc = cpu.pc + 1
+    let instruction = Belt.HashMap.get(instruction_table, op)
+    switch instruction {
+    | None => raise(ErrorInstruction)
+    | Some(i) =>
+      switch i.code {
+      | BRK => break := true
+      | LDA => {
+          lda(cpu, i.mode)
+          cpu.pc = cpu.pc + i.bytes - 1
+        }
+      | TAX => tax(cpu)
+      | INX => inx(cpu)
+      | INY => iny(cpu)
+      | STA => {
+          sta(cpu, i.mode)
+          cpu.pc = cpu.pc + i.bytes - 1
+        }
+      | _ => ()
       }
-    | 0xA5 => {
-        lda(cpu, ZeroPage)
-        cpu.pc = cpu.pc + 1
-      }
-    | 0xB5 => {
-        lda(cpu, ZeroPage_X)
-        cpu.pc = cpu.pc + 1
-      }
-    | 0xAD => {
-        lda(cpu, Absolute)
-        cpu.pc = cpu.pc + 2
-      }
-    | 0xBD => {
-        lda(cpu, Absolute_X)
-        cpu.pc = cpu.pc + 2
-      }
-    | 0xB9 => {
-        lda(cpu, Absolute_Y)
-        cpu.pc = cpu.pc + 2
-      }
-    | 0xA1 => {
-        lda(cpu, Indirect_X)
-        cpu.pc = cpu.pc + 1
-      }
-    | 0xB1 => {
-        lda(cpu, Indirect_Y)
-        cpu.pc = cpu.pc + 1
-      }
-    | 0xAA => tax(cpu)
-    | 0xE8 => inx(cpu)
-    | 0xC8 => iny(cpu)
-    | _ => ()
     }
   }
 }
@@ -212,53 +181,25 @@ let run = cpu => {
   while !break.contents {
     let op = mem_read(cpu, cpu.pc)
     cpu.pc = cpu.pc + 1
-
-    switch op {
-    | 0x00 => break := true
-    | 0xA9 => {
-        lda(cpu, Immediate)
-        cpu.pc = cpu.pc + 1
+    let instruction = Belt.HashMap.get(instruction_table, op)
+    switch instruction {
+    | None => raise(ErrorInstruction)
+    | Some(i) =>
+      switch i.code {
+      | BRK => break := true
+      | LDA => {
+          lda(cpu, i.mode)
+          cpu.pc = cpu.pc + i.bytes - 1
+        }
+      | TAX => tax(cpu)
+      | INX => inx(cpu)
+      | INY => iny(cpu)
+      | STA => {
+          sta(cpu, i.mode)
+          cpu.pc = cpu.pc + i.bytes - 1
+        }
+      | _ => ()
       }
-    | 0xA5 => {
-        lda(cpu, ZeroPage)
-        cpu.pc = cpu.pc + 1
-      }
-    | 0xB5 => {
-        lda(cpu, ZeroPage_X)
-        cpu.pc = cpu.pc + 1
-      }
-    | 0xAD => {
-        lda(cpu, Absolute)
-        cpu.pc = cpu.pc + 2
-      }
-    | 0xBD => {
-        lda(cpu, Absolute_X)
-        cpu.pc = cpu.pc + 2
-      }
-    | 0xB9 => {
-        lda(cpu, Absolute_Y)
-        cpu.pc = cpu.pc + 2
-      }
-    | 0xA1 => {
-        lda(cpu, Indirect_X)
-        cpu.pc = cpu.pc + 1
-      }
-    | 0xB1 => {
-        lda(cpu, Indirect_Y)
-        cpu.pc = cpu.pc + 1
-      }
-    | 0xAA => tax(cpu)
-    | 0xE8 => inx(cpu)
-    | 0xC8 => iny(cpu)
-    | 0x85 => {
-        sta(cpu, ZeroPage)
-        cpu.pc = cpu.pc + 1
-      }
-    | 0x95 => {
-        sta(cpu, ZeroPage_X)
-        cpu.pc = cpu.pc + 1
-      }
-    | _ => ()
     }
   }
 }

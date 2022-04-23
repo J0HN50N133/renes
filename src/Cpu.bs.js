@@ -4,9 +4,8 @@
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
 var Caml_array = require("rescript/lib/js/caml_array.js");
 var Caml_int32 = require("rescript/lib/js/caml_int32.js");
-var Caml_exceptions = require("rescript/lib/js/caml_exceptions.js");
-
-var UnSupportedAddressingMode = /* @__PURE__ */Caml_exceptions.create("Cpu.UnSupportedAddressingMode");
+var Instruction = require("./Instruction.bs.js");
+var Belt_HashMap = require("rescript/lib/js/belt_HashMap.js");
 
 function $$new(param) {
   return {
@@ -48,17 +47,17 @@ function update_zero_and_negative_flags(cpu, result) {
   
 }
 
+function update_overflow_flag_and_prune_result(cpu, result) {
+  cpu.status = result > 255 ? cpu.status | 64 : cpu.status & 191;
+  return result % 256;
+}
+
 function reset(cpu) {
   cpu.register_a = 0;
   cpu.register_x = 0;
   cpu.status = 0;
   cpu.pc = mem_read_2bytes(cpu, 65532);
   
-}
-
-function update_overflow_flag_and_prune_result(cpu, result) {
-  cpu.status = result > 255 ? cpu.status | 64 : cpu.status & 191;
-  return result % 256;
 }
 
 function wrapping_add(bits, a, b) {
@@ -109,7 +108,7 @@ function get_operand_address(cpu, mode) {
         return wrapping_add(16, deref_base, cpu.register_y);
     case /* NoneAddressing */9 :
         throw {
-              RE_EXN_ID: UnSupportedAddressingMode,
+              RE_EXN_ID: Instruction.UnSupportedAddressingMode,
               Error: new Error()
             };
     
@@ -152,90 +151,48 @@ function interpret(cpu, program) {
   while(!$$break) {
     var op = Caml_array.get(cpu.memory, cpu.pc);
     cpu.pc = cpu.pc + 1 | 0;
-    if (op !== 0) {
-      if (op >= 201) {
-        if (op !== 232) {
-          
+    var instruction = Belt_HashMap.get(Instruction.instruction_table, op);
+    if (instruction !== undefined) {
+      var match = instruction.code;
+      if (match >= 30) {
+        if (match !== 47) {
+          if (match !== 50) {
+            
+          } else {
+            tax(cpu);
+          }
         } else {
-          inx(cpu);
+          sta(cpu, instruction.mode);
+          cpu.pc = (cpu.pc + instruction.bytes | 0) - 1 | 0;
         }
-      } else if (op >= 161) {
-        switch (op) {
-          case 161 :
-              lda(cpu, /* Indirect_X */7);
-              cpu.pc = cpu.pc + 1 | 0;
-              break;
-          case 165 :
-              lda(cpu, /* ZeroPage */1);
-              cpu.pc = cpu.pc + 1 | 0;
-              break;
-          case 169 :
-              lda(cpu, /* Immediate */0);
-              cpu.pc = cpu.pc + 1 | 0;
-              break;
-          case 170 :
-              tax(cpu);
-              break;
-          case 173 :
-              lda(cpu, /* Absolute */4);
-              cpu.pc = cpu.pc + 2 | 0;
-              break;
-          case 177 :
-              lda(cpu, /* Indirect_Y */8);
-              cpu.pc = cpu.pc + 1 | 0;
-              break;
-          case 181 :
-              lda(cpu, /* ZeroPage_X */2);
-              cpu.pc = cpu.pc + 1 | 0;
-              break;
-          case 185 :
-              lda(cpu, /* Absolute_Y */6);
-              cpu.pc = cpu.pc + 2 | 0;
-              break;
-          case 189 :
-              lda(cpu, /* Absolute_X */5);
-              cpu.pc = cpu.pc + 2 | 0;
-              break;
-          case 162 :
-          case 163 :
-          case 164 :
-          case 166 :
-          case 167 :
-          case 168 :
-          case 171 :
-          case 172 :
-          case 174 :
-          case 175 :
-          case 176 :
-          case 178 :
-          case 179 :
-          case 180 :
-          case 182 :
-          case 183 :
-          case 184 :
-          case 186 :
-          case 187 :
-          case 188 :
-          case 190 :
-          case 191 :
-          case 192 :
-          case 193 :
-          case 194 :
-          case 195 :
-          case 196 :
-          case 197 :
-          case 198 :
-          case 199 :
-              break;
-          case 200 :
-              iny(cpu);
-              break;
-          
+      } else if (match !== 10) {
+        if (match >= 25) {
+          switch (match) {
+            case /* INX */25 :
+                inx(cpu);
+                break;
+            case /* INY */26 :
+                iny(cpu);
+                break;
+            case /* JMP */27 :
+            case /* JSR */28 :
+                break;
+            case /* LDA */29 :
+                lda(cpu, instruction.mode);
+                cpu.pc = (cpu.pc + instruction.bytes | 0) - 1 | 0;
+                break;
+            
+          }
         }
+        
+      } else {
+        $$break = true;
       }
-      
     } else {
-      $$break = true;
+      throw {
+            RE_EXN_ID: Instruction.ErrorInstruction,
+            Error: new Error()
+          };
     }
   };
   
@@ -254,111 +211,48 @@ function run(cpu) {
   while(!$$break) {
     var op = Caml_array.get(cpu.memory, cpu.pc);
     cpu.pc = cpu.pc + 1 | 0;
-    if (op >= 134) {
-      if (op >= 201) {
-        if (op !== 232) {
-          
+    var instruction = Belt_HashMap.get(Instruction.instruction_table, op);
+    if (instruction !== undefined) {
+      var match = instruction.code;
+      if (match >= 30) {
+        if (match !== 47) {
+          if (match !== 50) {
+            
+          } else {
+            tax(cpu);
+          }
         } else {
-          inx(cpu);
+          sta(cpu, instruction.mode);
+          cpu.pc = (cpu.pc + instruction.bytes | 0) - 1 | 0;
         }
-      } else if (op >= 149) {
-        switch (op) {
-          case 149 :
-              sta(cpu, /* ZeroPage_X */2);
-              cpu.pc = cpu.pc + 1 | 0;
-              break;
-          case 161 :
-              lda(cpu, /* Indirect_X */7);
-              cpu.pc = cpu.pc + 1 | 0;
-              break;
-          case 165 :
-              lda(cpu, /* ZeroPage */1);
-              cpu.pc = cpu.pc + 1 | 0;
-              break;
-          case 169 :
-              lda(cpu, /* Immediate */0);
-              cpu.pc = cpu.pc + 1 | 0;
-              break;
-          case 170 :
-              tax(cpu);
-              break;
-          case 173 :
-              lda(cpu, /* Absolute */4);
-              cpu.pc = cpu.pc + 2 | 0;
-              break;
-          case 177 :
-              lda(cpu, /* Indirect_Y */8);
-              cpu.pc = cpu.pc + 1 | 0;
-              break;
-          case 181 :
-              lda(cpu, /* ZeroPage_X */2);
-              cpu.pc = cpu.pc + 1 | 0;
-              break;
-          case 185 :
-              lda(cpu, /* Absolute_Y */6);
-              cpu.pc = cpu.pc + 2 | 0;
-              break;
-          case 189 :
-              lda(cpu, /* Absolute_X */5);
-              cpu.pc = cpu.pc + 2 | 0;
-              break;
-          case 150 :
-          case 151 :
-          case 152 :
-          case 153 :
-          case 154 :
-          case 155 :
-          case 156 :
-          case 157 :
-          case 158 :
-          case 159 :
-          case 160 :
-          case 162 :
-          case 163 :
-          case 164 :
-          case 166 :
-          case 167 :
-          case 168 :
-          case 171 :
-          case 172 :
-          case 174 :
-          case 175 :
-          case 176 :
-          case 178 :
-          case 179 :
-          case 180 :
-          case 182 :
-          case 183 :
-          case 184 :
-          case 186 :
-          case 187 :
-          case 188 :
-          case 190 :
-          case 191 :
-          case 192 :
-          case 193 :
-          case 194 :
-          case 195 :
-          case 196 :
-          case 197 :
-          case 198 :
-          case 199 :
-              break;
-          case 200 :
-              iny(cpu);
-              break;
-          
+      } else if (match !== 10) {
+        if (match >= 25) {
+          switch (match) {
+            case /* INX */25 :
+                inx(cpu);
+                break;
+            case /* INY */26 :
+                iny(cpu);
+                break;
+            case /* JMP */27 :
+            case /* JSR */28 :
+                break;
+            case /* LDA */29 :
+                lda(cpu, instruction.mode);
+                cpu.pc = (cpu.pc + instruction.bytes | 0) - 1 | 0;
+                break;
+            
+          }
         }
+        
+      } else {
+        $$break = true;
       }
-      
-    } else if (op !== 0) {
-      if (op >= 133) {
-        sta(cpu, /* ZeroPage */1);
-        cpu.pc = cpu.pc + 1 | 0;
-      }
-      
     } else {
-      $$break = true;
+      throw {
+            RE_EXN_ID: Instruction.ErrorInstruction,
+            Error: new Error()
+          };
     }
   };
   
@@ -370,15 +264,14 @@ function load_and_run(cpu, program) {
   return run(cpu);
 }
 
-exports.UnSupportedAddressingMode = UnSupportedAddressingMode;
 exports.$$new = $$new;
 exports.mem_read = mem_read;
 exports.mem_read_2bytes = mem_read_2bytes;
 exports.mem_write = mem_write;
 exports.mem_write_2bytes = mem_write_2bytes;
 exports.update_zero_and_negative_flags = update_zero_and_negative_flags;
-exports.reset = reset;
 exports.update_overflow_flag_and_prune_result = update_overflow_flag_and_prune_result;
+exports.reset = reset;
 exports.wrapping_add = wrapping_add;
 exports.wrapping_add_8 = wrapping_add_8;
 exports.wrapping_add_16 = wrapping_add_16;
@@ -392,4 +285,4 @@ exports.interpret = interpret;
 exports.load = load;
 exports.run = run;
 exports.load_and_run = load_and_run;
-/* No side effect */
+/* Instruction Not a pure module */
