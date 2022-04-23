@@ -42,7 +42,747 @@ var instruction_table = Belt_HashMap.fromArray([
           code: /* BRK */10,
           bytes: 1,
           cycles: 7,
-          mode: /* NoneAddressing */9
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        232,
+        {
+          bin: 232,
+          code: /* INX */25,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        200,
+        {
+          bin: 200,
+          code: /* INY */26,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        105,
+        {
+          bin: 105,
+          code: /* ADC */0,
+          bytes: 2,
+          cycles: 2,
+          mode: /* Immediate */0
+        }
+      ],
+      [
+        101,
+        {
+          bin: 101,
+          code: /* ADC */0,
+          bytes: 2,
+          cycles: 3,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        117,
+        {
+          bin: 117,
+          code: /* ADC */0,
+          bytes: 2,
+          cycles: 4,
+          mode: /* ZeroPage_X */3
+        }
+      ],
+      [
+        109,
+        {
+          bin: 109,
+          code: /* ADC */0,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        125,
+        {
+          bin: 125,
+          code: /* ADC */0,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute_X */6
+        }
+      ],
+      [
+        121,
+        {
+          bin: 121,
+          code: /* ADC */0,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute_Y */7
+        }
+      ],
+      [
+        97,
+        {
+          bin: 97,
+          code: /* ADC */0,
+          bytes: 2,
+          cycles: 6,
+          mode: /* Indirect_X */9
+        }
+      ],
+      [
+        113,
+        {
+          bin: 113,
+          code: /* ADC */0,
+          bytes: 2,
+          cycles: 5,
+          mode: /* Indirect_Y */10
+        }
+      ],
+      [
+        41,
+        {
+          bin: 41,
+          code: /* AND */1,
+          bytes: 2,
+          cycles: 2,
+          mode: /* Immediate */0
+        }
+      ],
+      [
+        37,
+        {
+          bin: 37,
+          code: /* AND */1,
+          bytes: 2,
+          cycles: 3,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        53,
+        {
+          bin: 53,
+          code: /* AND */1,
+          bytes: 2,
+          cycles: 4,
+          mode: /* ZeroPage_X */3
+        }
+      ],
+      [
+        45,
+        {
+          bin: 45,
+          code: /* AND */1,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        61,
+        {
+          bin: 61,
+          code: /* AND */1,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute_X */6
+        }
+      ],
+      [
+        57,
+        {
+          bin: 57,
+          code: /* AND */1,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute_Y */7
+        }
+      ],
+      [
+        33,
+        {
+          bin: 33,
+          code: /* AND */1,
+          bytes: 2,
+          cycles: 6,
+          mode: /* Indirect_X */9
+        }
+      ],
+      [
+        49,
+        {
+          bin: 49,
+          code: /* AND */1,
+          bytes: 2,
+          cycles: 5,
+          mode: /* Indirect_Y */10
+        }
+      ],
+      [
+        10,
+        {
+          bin: 10,
+          code: /* ASL */2,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        6,
+        {
+          bin: 6,
+          code: /* ASL */2,
+          bytes: 2,
+          cycles: 5,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        22,
+        {
+          bin: 22,
+          code: /* ASL */2,
+          bytes: 2,
+          cycles: 6,
+          mode: /* ZeroPage_X */3
+        }
+      ],
+      [
+        14,
+        {
+          bin: 14,
+          code: /* ASL */2,
+          bytes: 3,
+          cycles: 6,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        30,
+        {
+          bin: 30,
+          code: /* ASL */2,
+          bytes: 3,
+          cycles: 7,
+          mode: /* Absolute_X */6
+        }
+      ],
+      [
+        144,
+        {
+          bin: 144,
+          code: /* BCC */3,
+          bytes: 2,
+          cycles: 2,
+          mode: /* Relative */1
+        }
+      ],
+      [
+        176,
+        {
+          bin: 176,
+          code: /* BCS */4,
+          bytes: 2,
+          cycles: 2,
+          mode: /* Relative */1
+        }
+      ],
+      [
+        240,
+        {
+          bin: 240,
+          code: /* BEQ */5,
+          bytes: 2,
+          cycles: 2,
+          mode: /* Relative */1
+        }
+      ],
+      [
+        36,
+        {
+          bin: 36,
+          code: /* BIT */6,
+          bytes: 2,
+          cycles: 3,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        44,
+        {
+          bin: 44,
+          code: /* BIT */6,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        48,
+        {
+          bin: 48,
+          code: /* BMI */7,
+          bytes: 2,
+          cycles: 2,
+          mode: /* Relative */1
+        }
+      ],
+      [
+        208,
+        {
+          bin: 208,
+          code: /* BNE */8,
+          bytes: 2,
+          cycles: 2,
+          mode: /* Relative */1
+        }
+      ],
+      [
+        16,
+        {
+          bin: 16,
+          code: /* BPL */9,
+          bytes: 2,
+          cycles: 2,
+          mode: /* Relative */1
+        }
+      ],
+      [
+        80,
+        {
+          bin: 80,
+          code: /* BVC */11,
+          bytes: 2,
+          cycles: 2,
+          mode: /* Relative */1
+        }
+      ],
+      [
+        112,
+        {
+          bin: 112,
+          code: /* BVS */12,
+          bytes: 2,
+          cycles: 2,
+          mode: /* Relative */1
+        }
+      ],
+      [
+        24,
+        {
+          bin: 24,
+          code: /* CLC */13,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        216,
+        {
+          bin: 216,
+          code: /* CLD */14,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        88,
+        {
+          bin: 88,
+          code: /* CLI */15,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        184,
+        {
+          bin: 184,
+          code: /* CLV */16,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        201,
+        {
+          bin: 201,
+          code: /* CMP */17,
+          bytes: 2,
+          cycles: 2,
+          mode: /* Immediate */0
+        }
+      ],
+      [
+        197,
+        {
+          bin: 197,
+          code: /* CMP */17,
+          bytes: 2,
+          cycles: 3,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        213,
+        {
+          bin: 213,
+          code: /* CMP */17,
+          bytes: 2,
+          cycles: 4,
+          mode: /* ZeroPage_X */3
+        }
+      ],
+      [
+        205,
+        {
+          bin: 205,
+          code: /* CMP */17,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        221,
+        {
+          bin: 221,
+          code: /* CMP */17,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute_X */6
+        }
+      ],
+      [
+        217,
+        {
+          bin: 217,
+          code: /* CMP */17,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute_Y */7
+        }
+      ],
+      [
+        193,
+        {
+          bin: 193,
+          code: /* CMP */17,
+          bytes: 2,
+          cycles: 6,
+          mode: /* Indirect_X */9
+        }
+      ],
+      [
+        209,
+        {
+          bin: 209,
+          code: /* CMP */17,
+          bytes: 2,
+          cycles: 5,
+          mode: /* Indirect_Y */10
+        }
+      ],
+      [
+        224,
+        {
+          bin: 224,
+          code: /* CPX */18,
+          bytes: 2,
+          cycles: 2,
+          mode: /* Immediate */0
+        }
+      ],
+      [
+        228,
+        {
+          bin: 228,
+          code: /* CPX */18,
+          bytes: 2,
+          cycles: 3,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        236,
+        {
+          bin: 236,
+          code: /* CPX */18,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        192,
+        {
+          bin: 192,
+          code: /* CPY */19,
+          bytes: 2,
+          cycles: 2,
+          mode: /* Immediate */0
+        }
+      ],
+      [
+        196,
+        {
+          bin: 196,
+          code: /* CPY */19,
+          bytes: 2,
+          cycles: 3,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        204,
+        {
+          bin: 204,
+          code: /* CPY */19,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        198,
+        {
+          bin: 198,
+          code: /* DEC */20,
+          bytes: 2,
+          cycles: 5,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        214,
+        {
+          bin: 214,
+          code: /* DEC */20,
+          bytes: 2,
+          cycles: 6,
+          mode: /* ZeroPage_X */3
+        }
+      ],
+      [
+        206,
+        {
+          bin: 206,
+          code: /* DEC */20,
+          bytes: 3,
+          cycles: 6,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        222,
+        {
+          bin: 222,
+          code: /* DEC */20,
+          bytes: 3,
+          cycles: 7,
+          mode: /* Absolute_X */6
+        }
+      ],
+      [
+        202,
+        {
+          bin: 202,
+          code: /* DEX */21,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        136,
+        {
+          bin: 136,
+          code: /* DEY */22,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        73,
+        {
+          bin: 73,
+          code: /* EOR */23,
+          bytes: 2,
+          cycles: 2,
+          mode: /* Immediate */0
+        }
+      ],
+      [
+        69,
+        {
+          bin: 69,
+          code: /* EOR */23,
+          bytes: 2,
+          cycles: 3,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        85,
+        {
+          bin: 85,
+          code: /* EOR */23,
+          bytes: 2,
+          cycles: 4,
+          mode: /* ZeroPage_X */3
+        }
+      ],
+      [
+        77,
+        {
+          bin: 77,
+          code: /* EOR */23,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        93,
+        {
+          bin: 93,
+          code: /* EOR */23,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute_X */6
+        }
+      ],
+      [
+        89,
+        {
+          bin: 89,
+          code: /* EOR */23,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute_Y */7
+        }
+      ],
+      [
+        65,
+        {
+          bin: 65,
+          code: /* EOR */23,
+          bytes: 2,
+          cycles: 6,
+          mode: /* Indirect_Y */10
+        }
+      ],
+      [
+        81,
+        {
+          bin: 81,
+          code: /* EOR */23,
+          bytes: 2,
+          cycles: 5,
+          mode: /* Indirect_Y */10
+        }
+      ],
+      [
+        230,
+        {
+          bin: 230,
+          code: /* INC */24,
+          bytes: 2,
+          cycles: 5,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        246,
+        {
+          bin: 246,
+          code: /* INC */24,
+          bytes: 2,
+          cycles: 6,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        238,
+        {
+          bin: 238,
+          code: /* INC */24,
+          bytes: 3,
+          cycles: 6,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        254,
+        {
+          bin: 254,
+          code: /* INC */24,
+          bytes: 3,
+          cycles: 7,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        232,
+        {
+          bin: 232,
+          code: /* INX */25,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        200,
+        {
+          bin: 200,
+          code: /* INY */26,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        76,
+        {
+          bin: 76,
+          code: /* JMP */27,
+          bytes: 3,
+          cycles: 3,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        108,
+        {
+          bin: 108,
+          code: /* JMP */27,
+          bytes: 3,
+          cycles: 5,
+          mode: /* Indirect */8
+        }
+      ],
+      [
+        32,
+        {
+          bin: 32,
+          code: /* JSR */28,
+          bytes: 3,
+          cycles: 6,
+          mode: /* Absolute */5
         }
       ],
       [
@@ -62,7 +802,7 @@ var instruction_table = Belt_HashMap.fromArray([
           code: /* LDA */29,
           bytes: 2,
           cycles: 3,
-          mode: /* ZeroPage */1
+          mode: /* ZeroPage */2
         }
       ],
       [
@@ -72,7 +812,7 @@ var instruction_table = Belt_HashMap.fromArray([
           code: /* LDA */29,
           bytes: 2,
           cycles: 4,
-          mode: /* ZeroPage_X */2
+          mode: /* ZeroPage_X */3
         }
       ],
       [
@@ -82,7 +822,7 @@ var instruction_table = Belt_HashMap.fromArray([
           code: /* LDA */29,
           bytes: 3,
           cycles: 4,
-          mode: /* Absolute */4
+          mode: /* Absolute */5
         }
       ],
       [
@@ -92,7 +832,7 @@ var instruction_table = Belt_HashMap.fromArray([
           code: /* LDA */29,
           bytes: 3,
           cycles: 4,
-          mode: /* Absolute_X */5
+          mode: /* Absolute_X */6
         }
       ],
       [
@@ -102,7 +842,7 @@ var instruction_table = Belt_HashMap.fromArray([
           code: /* LDA */29,
           bytes: 3,
           cycles: 4,
-          mode: /* Absolute_Y */6
+          mode: /* Absolute_Y */7
         }
       ],
       [
@@ -112,7 +852,7 @@ var instruction_table = Belt_HashMap.fromArray([
           code: /* LDA */29,
           bytes: 2,
           cycles: 6,
-          mode: /* Indirect_X */7
+          mode: /* Indirect_X */9
         }
       ],
       [
@@ -122,37 +862,507 @@ var instruction_table = Belt_HashMap.fromArray([
           code: /* LDA */29,
           bytes: 2,
           cycles: 5,
-          mode: /* Indirect_Y */8
+          mode: /* Indirect_Y */10
         }
       ],
       [
-        170,
+        162,
         {
-          bin: 170,
-          code: /* TAX */50,
-          bytes: 1,
+          bin: 162,
+          code: /* LDX */30,
+          bytes: 2,
           cycles: 2,
-          mode: /* NoneAddressing */9
+          mode: /* Immediate */0
         }
       ],
       [
-        232,
+        166,
         {
-          bin: 232,
-          code: /* INX */25,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */9
+          bin: 166,
+          code: /* LDX */30,
+          bytes: 2,
+          cycles: 3,
+          mode: /* ZeroPage */2
         }
       ],
       [
-        200,
+        182,
         {
-          bin: 200,
-          code: /* INY */26,
+          bin: 182,
+          code: /* LDX */30,
+          bytes: 2,
+          cycles: 4,
+          mode: /* ZeroPage_Y */4
+        }
+      ],
+      [
+        174,
+        {
+          bin: 174,
+          code: /* LDX */30,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        190,
+        {
+          bin: 190,
+          code: /* LDX */30,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute_Y */7
+        }
+      ],
+      [
+        160,
+        {
+          bin: 160,
+          code: /* LDY */31,
+          bytes: 2,
+          cycles: 2,
+          mode: /* Immediate */0
+        }
+      ],
+      [
+        164,
+        {
+          bin: 164,
+          code: /* LDY */31,
+          bytes: 2,
+          cycles: 3,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        180,
+        {
+          bin: 180,
+          code: /* LDY */31,
+          bytes: 2,
+          cycles: 4,
+          mode: /* ZeroPage_Y */4
+        }
+      ],
+      [
+        172,
+        {
+          bin: 172,
+          code: /* LDY */31,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        188,
+        {
+          bin: 188,
+          code: /* LDY */31,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute_Y */7
+        }
+      ],
+      [
+        74,
+        {
+          bin: 74,
+          code: /* LSR */32,
           bytes: 1,
           cycles: 2,
-          mode: /* NoneAddressing */9
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        70,
+        {
+          bin: 70,
+          code: /* LSR */32,
+          bytes: 2,
+          cycles: 5,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        86,
+        {
+          bin: 86,
+          code: /* LSR */32,
+          bytes: 2,
+          cycles: 6,
+          mode: /* ZeroPage_X */3
+        }
+      ],
+      [
+        78,
+        {
+          bin: 78,
+          code: /* LSR */32,
+          bytes: 3,
+          cycles: 6,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        94,
+        {
+          bin: 94,
+          code: /* LSR */32,
+          bytes: 3,
+          cycles: 7,
+          mode: /* Absolute_X */6
+        }
+      ],
+      [
+        234,
+        {
+          bin: 234,
+          code: /* NOP */33,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        9,
+        {
+          bin: 9,
+          code: /* ORA */34,
+          bytes: 2,
+          cycles: 2,
+          mode: /* Immediate */0
+        }
+      ],
+      [
+        5,
+        {
+          bin: 5,
+          code: /* ORA */34,
+          bytes: 2,
+          cycles: 3,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        21,
+        {
+          bin: 21,
+          code: /* ORA */34,
+          bytes: 2,
+          cycles: 4,
+          mode: /* ZeroPage_X */3
+        }
+      ],
+      [
+        13,
+        {
+          bin: 13,
+          code: /* ORA */34,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        29,
+        {
+          bin: 29,
+          code: /* ORA */34,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute_X */6
+        }
+      ],
+      [
+        25,
+        {
+          bin: 25,
+          code: /* ORA */34,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute_Y */7
+        }
+      ],
+      [
+        1,
+        {
+          bin: 1,
+          code: /* ORA */34,
+          bytes: 2,
+          cycles: 6,
+          mode: /* Indirect_X */9
+        }
+      ],
+      [
+        17,
+        {
+          bin: 17,
+          code: /* ORA */34,
+          bytes: 2,
+          cycles: 5,
+          mode: /* Indirect_Y */10
+        }
+      ],
+      [
+        72,
+        {
+          bin: 72,
+          code: /* PHA */35,
+          bytes: 1,
+          cycles: 3,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        8,
+        {
+          bin: 8,
+          code: /* PHP */36,
+          bytes: 1,
+          cycles: 3,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        104,
+        {
+          bin: 104,
+          code: /* PLA */37,
+          bytes: 1,
+          cycles: 4,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        40,
+        {
+          bin: 40,
+          code: /* ROL */39,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        42,
+        {
+          bin: 42,
+          code: /* ROL */39,
+          bytes: 2,
+          cycles: 5,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        38,
+        {
+          bin: 38,
+          code: /* ROL */39,
+          bytes: 2,
+          cycles: 6,
+          mode: /* ZeroPage_X */3
+        }
+      ],
+      [
+        54,
+        {
+          bin: 54,
+          code: /* ROL */39,
+          bytes: 3,
+          cycles: 6,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        46,
+        {
+          bin: 46,
+          code: /* ROL */39,
+          bytes: 3,
+          cycles: 7,
+          mode: /* Absolute_X */6
+        }
+      ],
+      [
+        106,
+        {
+          bin: 106,
+          code: /* ROR */40,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        102,
+        {
+          bin: 102,
+          code: /* ROR */40,
+          bytes: 2,
+          cycles: 5,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        118,
+        {
+          bin: 118,
+          code: /* ROR */40,
+          bytes: 2,
+          cycles: 6,
+          mode: /* ZeroPage_X */3
+        }
+      ],
+      [
+        110,
+        {
+          bin: 110,
+          code: /* ROR */40,
+          bytes: 3,
+          cycles: 6,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        126,
+        {
+          bin: 126,
+          code: /* ROR */40,
+          bytes: 3,
+          cycles: 7,
+          mode: /* Absolute_X */6
+        }
+      ],
+      [
+        64,
+        {
+          bin: 64,
+          code: /* RTI */41,
+          bytes: 1,
+          cycles: 6,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        96,
+        {
+          bin: 96,
+          code: /* RTS */42,
+          bytes: 1,
+          cycles: 6,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        249,
+        {
+          bin: 249,
+          code: /* SBC */43,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Immediate */0
+        }
+      ],
+      [
+        233,
+        {
+          bin: 233,
+          code: /* SBC */43,
+          bytes: 2,
+          cycles: 2,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        229,
+        {
+          bin: 229,
+          code: /* SBC */43,
+          bytes: 2,
+          cycles: 3,
+          mode: /* ZeroPage_X */3
+        }
+      ],
+      [
+        245,
+        {
+          bin: 245,
+          code: /* SBC */43,
+          bytes: 2,
+          cycles: 4,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        237,
+        {
+          bin: 237,
+          code: /* SBC */43,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute_X */6
+        }
+      ],
+      [
+        253,
+        {
+          bin: 253,
+          code: /* SBC */43,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute_Y */7
+        }
+      ],
+      [
+        225,
+        {
+          bin: 225,
+          code: /* SBC */43,
+          bytes: 2,
+          cycles: 6,
+          mode: /* Indirect_X */9
+        }
+      ],
+      [
+        241,
+        {
+          bin: 241,
+          code: /* SBC */43,
+          bytes: 2,
+          cycles: 5,
+          mode: /* Indirect_Y */10
+        }
+      ],
+      [
+        56,
+        {
+          bin: 56,
+          code: /* SEC */44,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        248,
+        {
+          bin: 248,
+          code: /* SED */45,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        120,
+        {
+          bin: 120,
+          code: /* SEI */46,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
         }
       ],
       [
@@ -162,7 +1372,7 @@ var instruction_table = Belt_HashMap.fromArray([
           code: /* STA */47,
           bytes: 2,
           cycles: 3,
-          mode: /* ZeroPage */1
+          mode: /* ZeroPage */2
         }
       ],
       [
@@ -172,7 +1382,7 @@ var instruction_table = Belt_HashMap.fromArray([
           code: /* STA */47,
           bytes: 2,
           cycles: 4,
-          mode: /* ZeroPage_X */2
+          mode: /* ZeroPage_X */3
         }
       ],
       [
@@ -182,7 +1392,7 @@ var instruction_table = Belt_HashMap.fromArray([
           code: /* STA */47,
           bytes: 3,
           cycles: 4,
-          mode: /* Absolute */4
+          mode: /* Absolute */5
         }
       ],
       [
@@ -192,7 +1402,7 @@ var instruction_table = Belt_HashMap.fromArray([
           code: /* STA */47,
           bytes: 3,
           cycles: 5,
-          mode: /* Absolute_X */5
+          mode: /* Absolute_X */6
         }
       ],
       [
@@ -202,7 +1412,7 @@ var instruction_table = Belt_HashMap.fromArray([
           code: /* STA */47,
           bytes: 3,
           cycles: 5,
-          mode: /* Absolute_Y */6
+          mode: /* Absolute_Y */7
         }
       ],
       [
@@ -212,7 +1422,7 @@ var instruction_table = Belt_HashMap.fromArray([
           code: /* STA */47,
           bytes: 2,
           cycles: 6,
-          mode: /* Indirect_X */7
+          mode: /* Indirect_X */9
         }
       ],
       [
@@ -222,7 +1432,117 @@ var instruction_table = Belt_HashMap.fromArray([
           code: /* STA */47,
           bytes: 2,
           cycles: 6,
-          mode: /* Indirect_Y */8
+          mode: /* Indirect_Y */10
+        }
+      ],
+      [
+        134,
+        {
+          bin: 134,
+          code: /* STX */48,
+          bytes: 2,
+          cycles: 3,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        150,
+        {
+          bin: 150,
+          code: /* STX */48,
+          bytes: 2,
+          cycles: 4,
+          mode: /* ZeroPage_Y */4
+        }
+      ],
+      [
+        142,
+        {
+          bin: 142,
+          code: /* STX */48,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        134,
+        {
+          bin: 134,
+          code: /* STY */49,
+          bytes: 2,
+          cycles: 3,
+          mode: /* ZeroPage */2
+        }
+      ],
+      [
+        150,
+        {
+          bin: 150,
+          code: /* STY */49,
+          bytes: 2,
+          cycles: 4,
+          mode: /* ZeroPage_X */3
+        }
+      ],
+      [
+        142,
+        {
+          bin: 142,
+          code: /* STY */49,
+          bytes: 3,
+          cycles: 4,
+          mode: /* Absolute */5
+        }
+      ],
+      [
+        170,
+        {
+          bin: 170,
+          code: /* TAX */50,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        168,
+        {
+          bin: 168,
+          code: /* TAY */51,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        138,
+        {
+          bin: 138,
+          code: /* TXA */53,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        154,
+        {
+          bin: 154,
+          code: /* TXS */54,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
+        }
+      ],
+      [
+        152,
+        {
+          bin: 152,
+          code: /* TYA */55,
+          bytes: 1,
+          cycles: 2,
+          mode: /* NoneAddressing */11
         }
       ]
     ], IntHash);

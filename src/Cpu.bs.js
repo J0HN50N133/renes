@@ -84,43 +84,53 @@ function get_operand_address(cpu, mode) {
   switch (mode) {
     case /* Immediate */0 :
         return cpu.pc;
-    case /* ZeroPage */1 :
+    case /* Relative */1 :
+        return cpu.pc + cpu.memory[cpu.pc + 1 | 0] | 0;
+    case /* ZeroPage */2 :
         return cpu.memory[cpu.pc];
-    case /* ZeroPage_X */2 :
+    case /* ZeroPage_X */3 :
         var pos = cpu.memory[cpu.pc];
         return wrapping_add(16, pos, cpu.register_x);
-    case /* ZeroPage_Y */3 :
+    case /* ZeroPage_Y */4 :
         var pos$1 = cpu.memory[cpu.pc];
         return wrapping_add(16, pos$1, cpu.register_y);
-    case /* Absolute */4 :
+    case /* Absolute */5 :
         return mem_read_2bytes(cpu, cpu.pc);
-    case /* Absolute_X */5 :
+    case /* Absolute_X */6 :
         var base = mem_read_2bytes(cpu, cpu.pc);
         return wrapping_add(16, base, cpu.register_x);
-    case /* Absolute_Y */6 :
+    case /* Absolute_Y */7 :
         var base$1 = mem_read_2bytes(cpu, cpu.pc);
         return wrapping_add(16, base$1, cpu.register_y);
-    case /* Indirect_X */7 :
+    case /* Indirect */8 :
+        var addr = mem_read_2bytes(cpu, cpu.pc + 1 | 0);
+        return cpu.memory[addr];
+    case /* Indirect_X */9 :
         var base$2 = cpu.memory[cpu.pc];
         var ptr = wrapping_add(8, base$2, cpu.register_x);
         var lo = cpu.memory[ptr];
-        var addr = wrapping_add(8, ptr, 1);
-        var hi = cpu.memory[addr];
+        var addr$1 = wrapping_add(8, ptr, 1);
+        var hi = cpu.memory[addr$1];
         return (hi << 8) | lo;
-    case /* Indirect_Y */8 :
+    case /* Indirect_Y */10 :
         var base$3 = cpu.memory[cpu.pc];
         var lo$1 = cpu.memory[base$3];
-        var addr$1 = wrapping_add(8, base$3, 1);
-        var hi$1 = cpu.memory[addr$1];
+        var addr$2 = wrapping_add(8, base$3, 1);
+        var hi$1 = cpu.memory[addr$2];
         var deref_base = (hi$1 << 8) | lo$1;
         return wrapping_add(16, deref_base, cpu.register_y);
-    case /* NoneAddressing */9 :
+    case /* NoneAddressing */11 :
         throw {
               RE_EXN_ID: Instruction.UnSupportedAddressingMode,
               Error: new Error()
             };
     
   }
+}
+
+function adc(cpu, mode) {
+  get_operand_address(cpu, mode);
+  
 }
 
 function lda(cpu, mode) {
@@ -221,11 +231,12 @@ function run(cpu) {
     cpu.pc = cpu.pc + 1 | 0;
     var instruction = Belt_HashMap.get(Instruction.instruction_table, op);
     if (instruction !== undefined) {
+      var exit = 0;
       var match = instruction.code;
       if (match >= 30) {
         if (match !== 47) {
           if (match !== 50) {
-            
+            exit = 1;
           } else {
             tax(cpu);
           }
@@ -244,6 +255,7 @@ function run(cpu) {
                 break;
             case /* JMP */27 :
             case /* JSR */28 :
+                exit = 1;
                 break;
             case /* LDA */29 :
                 lda(cpu, instruction.mode);
@@ -251,11 +263,24 @@ function run(cpu) {
                 break;
             
           }
+        } else {
+          exit = 1;
         }
-        
       } else {
         $$break = true;
       }
+      if (exit === 1) {
+        throw {
+              RE_EXN_ID: "Match_failure",
+              _1: [
+                "Cpu.res",
+                202,
+                6
+              ],
+              Error: new Error()
+            };
+      }
+      
     } else {
       throw {
             RE_EXN_ID: Instruction.ErrorInstruction,
@@ -286,6 +311,7 @@ exports.wrapping_add = wrapping_add;
 exports.wrapping_add_8 = wrapping_add_8;
 exports.wrapping_add_16 = wrapping_add_16;
 exports.get_operand_address = get_operand_address;
+exports.adc = adc;
 exports.lda = lda;
 exports.tax = tax;
 exports.inx = inx;

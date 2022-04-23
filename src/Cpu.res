@@ -68,6 +68,7 @@ let update_overflow_flag_and_prune_result = (cpu, result) => {
   }
   mod(result, 256)
 }
+
 let reset = cpu => {
   cpu.register_a = 0
   cpu.register_x = 0
@@ -84,6 +85,7 @@ let wrapping_add_16 = wrapping_add(16)
 let get_operand_address = (cpu, mode) =>
   switch mode {
   | Immediate => cpu.pc
+  | Relative => cpu.pc + mem_read(cpu, cpu.pc + 1)
   | ZeroPage => mem_read(cpu, cpu.pc)
   | Absolute => mem_read_2bytes(cpu, cpu.pc)
   | ZeroPage_X => {
@@ -121,8 +123,13 @@ let get_operand_address = (cpu, mode) =>
       let deref = wrapping_add_16(deref_base, cpu.register_y)
       deref
     }
+  | Indirect => mem_read(cpu, mem_read_2bytes(cpu, cpu.pc + 1))
   | NoneAddressing => raise(UnSupportedAddressingMode)
   }
+let adc = (cpu, mode) => {
+  let addr = get_operand_address(cpu, mode)
+  let m = mem_read(cpu, addr)
+}
 let lda = (cpu, mode) => {
   let addr = get_operand_address(cpu, mode)
   cpu.register_a = mem_read(cpu, addr)
@@ -205,7 +212,6 @@ let run = cpu => {
           sta(cpu, i.mode)
           cpu.pc = cpu.pc + i.bytes - 1
         }
-      | _ => ()
       }
     }
   }
