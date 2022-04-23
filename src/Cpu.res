@@ -10,6 +10,7 @@
  * C	Carry
  */
 open Instruction
+open Js.TypedArray2
 type cpu = {
   mutable register_a: int,
   mutable register_x: int,
@@ -17,7 +18,7 @@ type cpu = {
   mutable stack_pointer: int,
   mutable status: int,
   mutable pc: int,
-  mutable memory: array<int>,
+  mutable memory: Uint8Array.t,
 }
 let new = () => {
   {
@@ -27,17 +28,17 @@ let new = () => {
     stack_pointer: 0,
     status: 0,
     pc: 0,
-    memory: Belt.Array.make(0xFFFF, 0),
+    memory: Uint8Array.fromBuffer(ArrayBuffer.make(0xFFFF)),
   }
 }
-let mem_read = (cpu, addr) => cpu.memory[addr]
+let mem_read = (cpu, addr) => Uint8Array.unsafe_get(cpu.memory, addr)
 let mem_read_2bytes = (cpu, addr) => {
   let lo = mem_read(cpu, addr)
   let hi = mem_read(cpu, addr + 1)
   lor(lsl(hi, 8), lo)
 }
 /* mem_write: write [data] to the [addr] of [cpu]'s memory */
-let mem_write = (cpu, addr, data) => cpu.memory[addr] = data
+let mem_write = (cpu, addr, data) => Uint8Array.unsafe_set(cpu.memory, addr, data)
 let mem_write_2bytes = (cpu, addr, data) => {
   let hi = lsr(data, 8)
   let lo = land(data, 0xff)
@@ -129,7 +130,6 @@ let lda = (cpu, mode) => {
 }
 let tax = cpu => {
   cpu.register_x = cpu.register_a
-  Js.log(cpu.register_x)
   update_zero_and_negative_flags(cpu, cpu.register_x)
 }
 let inx = cpu => {
@@ -177,8 +177,9 @@ let interpret = (cpu, program) => {
 }
 let load = (cpu, program) => {
   cpu.pc = 0x8000
-  for x in 0 to Belt.Array.length(program) - 1 {
-    cpu.memory[0x8000 + x] = program[x]
+  let len = Uint8Array.length(program)
+  for i in 0 to len - 1 {
+    Uint8Array.unsafe_set(cpu.memory, i, Uint8Array.unsafe_get(program, i))
   }
   mem_write(cpu, 0xFFFC, 0x8000)
 }

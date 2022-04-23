@@ -4,14 +4,24 @@
 var Cpu = require("../src/Cpu.bs.js");
 var Jest = require("@glennsl/rescript-jest/src/jest.bs.js");
 var Curry = require("rescript/lib/js/curry.js");
+var Caml_array = require("rescript/lib/js/caml_array.js");
+
+function array2bytes(arr) {
+  var len = arr.length;
+  var buffer = new Uint8Array(new ArrayBuffer(len));
+  for(var i = 0; i < len; ++i){
+    buffer[i] = Caml_array.get(arr, i);
+  }
+  return buffer;
+}
 
 Jest.describe("test_0xa9_lda_immidiate_load_data", (function (param) {
         var cpu = Cpu.$$new(undefined);
-        Cpu.interpret(cpu, [
-              169,
-              5,
-              0
-            ]);
+        Cpu.interpret(cpu, array2bytes([
+                  169,
+                  5,
+                  0
+                ]));
         Jest.test("register_a", (function (param) {
                 return Jest.Expect.toBe(Jest.Expect.expect(cpu.register_a), 5);
               }));
@@ -25,11 +35,11 @@ Jest.describe("test_0xa9_lda_immidiate_load_data", (function (param) {
 
 Jest.describe("test_0xa9_lda_zero_flag", (function (param) {
         var cpu = Cpu.$$new(undefined);
-        Cpu.interpret(cpu, [
-              169,
-              0,
-              0
-            ]);
+        Cpu.interpret(cpu, array2bytes([
+                  169,
+                  0,
+                  0
+                ]));
         return Jest.test("cpu_status", (function (param) {
                       return Jest.Expect.toBe(Jest.Expect.expect(cpu.status & 2), 2);
                     }));
@@ -38,10 +48,10 @@ Jest.describe("test_0xa9_lda_zero_flag", (function (param) {
 Jest.describe("test_0xaa_tax_move_a_to_x", (function (param) {
         var cpu = Cpu.$$new(undefined);
         cpu.register_a = 10;
-        Cpu.interpret(cpu, [
-              170,
-              0
-            ]);
+        Cpu.interpret(cpu, array2bytes([
+                  170,
+                  0
+                ]));
         return Jest.test("register_x", (function (param) {
                       return Jest.Expect.toBe(Jest.Expect.expect(cpu.register_x), 10);
                     }));
@@ -49,13 +59,13 @@ Jest.describe("test_0xaa_tax_move_a_to_x", (function (param) {
 
 Jest.describe("test_5_ops_workding_together", (function (param) {
         var cpu = Cpu.$$new(undefined);
-        Cpu.interpret(cpu, [
-              169,
-              192,
-              170,
-              232,
-              0
-            ]);
+        Cpu.interpret(cpu, array2bytes([
+                  169,
+                  192,
+                  170,
+                  232,
+                  0
+                ]));
         return Jest.test("register_x", (function (param) {
                       return Curry._2(Jest.Expect.Operators.$eq$eq, Jest.Expect.expect(cpu.register_x), 193);
                     }));
@@ -64,11 +74,11 @@ Jest.describe("test_5_ops_workding_together", (function (param) {
 Jest.describe("test_inx_overflow", (function (param) {
         var cpu = Cpu.$$new(undefined);
         cpu.register_x = 255;
-        Cpu.interpret(cpu, [
-              232,
-              232,
-              0
-            ]);
+        Cpu.interpret(cpu, array2bytes([
+                  232,
+                  232,
+                  0
+                ]));
         return Jest.test("register_x", (function (param) {
                       return Curry._2(Jest.Expect.Operators.$eq$eq, Jest.Expect.expect(cpu.register_x), 1);
                     }));
@@ -77,11 +87,11 @@ Jest.describe("test_inx_overflow", (function (param) {
 Jest.describe("test_iny_overflow", (function (param) {
         var cpu = Cpu.$$new(undefined);
         cpu.register_y = 255;
-        Cpu.interpret(cpu, [
-              200,
-              200,
-              0
-            ]);
+        Cpu.interpret(cpu, array2bytes([
+                  200,
+                  200,
+                  0
+                ]));
         return Jest.test("register_x", (function (param) {
                       return Curry._2(Jest.Expect.Operators.$eq$eq, Jest.Expect.expect(cpu.register_y), 1);
                     }));
@@ -90,14 +100,15 @@ Jest.describe("test_iny_overflow", (function (param) {
 Jest.describe("test_lda_from_memory", (function (param) {
         var cpu = Cpu.$$new(undefined);
         Cpu.mem_write(cpu, 16, 85);
-        Cpu.load_and_run(cpu, [
-              165,
-              16,
-              0
-            ]);
+        Cpu.load_and_run(cpu, array2bytes([
+                  165,
+                  16,
+                  0
+                ]));
         return Jest.test("register_a", (function (param) {
                       return Curry._2(Jest.Expect.Operators.$eq$eq, Jest.Expect.expect(cpu.register_a), 85);
                     }));
       }));
 
+exports.array2bytes = array2bytes;
 /*  Not a pure module */
