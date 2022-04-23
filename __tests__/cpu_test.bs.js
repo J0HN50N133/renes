@@ -87,4 +87,17 @@ Jest.describe("test_iny_overflow", (function (param) {
                     }));
       }));
 
+Jest.describe("test_lda_from_memory", (function (param) {
+        var cpu = Cpu.$$new(undefined);
+        Cpu.mem_write(cpu, 16, 85);
+        Cpu.load_and_run(cpu, [
+              165,
+              16,
+              0
+            ]);
+        return Jest.test("register_a", (function (param) {
+                      return Curry._2(Jest.Expect.Operators.$eq$eq, Jest.Expect.expect(cpu.register_a), 85);
+                    }));
+      }));
+
 /*  Not a pure module */

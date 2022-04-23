@@ -49,3 +49,11 @@ describe("test_iny_overflow", () => {
   Cpu.interpret(cpu, [0xc8, 0xc8, 0x00])
   test("register_x", () => expect(cpu.register_y) === 0x01)
 })
+describe("test_lda_from_memory", () => {
+  open Expect
+  open! Expect.Operators
+  let cpu = Cpu.new()
+  Cpu.mem_write(cpu, 0x10, 0x55)
+  Cpu.load_and_run(cpu, [0xa5, 0x10, 0x00])
+  test("register_a", () => expect(cpu.register_a) === 0x55)
+})
