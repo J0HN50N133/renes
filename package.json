@@ -2,7 +2,7 @@
   "name": "rescript-project-template",
   "version": "0.0.1",
   "scripts": {
-    "build": "rescript",
+    "build": "rescript build -- ",
     "clean": "rescript clean -with-deps",
     "start": "rescript build -w",
     "test": "jest"
@@ -13,7 +13,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "rescript": "*"
+    "rescript": "*",
+    "rescript-webapi": "^0.6.1"
   },
   "devDependencies": {
     "@glennsl/rescript-jest": "^0.9.1"
