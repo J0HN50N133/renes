@@ -19,6 +19,7 @@ type cpu = {
   mutable pc: int,
   mutable memory: Uint8Array.t,
   mutable stack: int,
+  mutable jumped: bool, // whether pc just jump from other place
   mutable n: int,
   mutable v: int,
   mutable g: int,
@@ -55,6 +56,7 @@ let new = () => {
     pc: 0,
     memory: Uint8Array.fromBuffer(ArrayBuffer.make(0xFFFF)),
     stack: stack_init_val,
+    jumped: false,
     n: 0,
     v: 0,
     g: 0,
@@ -78,6 +80,26 @@ let mem_write_2bytes = (cpu, addr, data) => {
   let lo = land(data, 0xff)
   mem_write(cpu, addr, lo)
   mem_write(cpu, addr + 1, hi)
+}
+
+let stack_push = (cpu, data) => {
+  mem_write(cpu, cpu.stack + cpu.stack_pointer, data)
+  cpu.stack_pointer = cpu.stack_pointer - 1
+}
+let stack_push_2bytes = (cpu, data) => {
+  let hi = lsr(data, 8)
+  let lo = land(data, 0xff)
+  stack_push(cpu, hi)
+  stack_push(cpu, lo)
+}
+let stack_pop = cpu => {
+  cpu.stack_pointer = cpu.stack_pointer + 1
+  mem_read(cpu, cpu.stack + cpu.stack_pointer)
+}
+let stack_pop_2bytes = cpu => {
+  let lo = stack_pop(cpu)
+  let hi = stack_pop(cpu)
+  lor(lsl(hi, 8), lo)
 }
 let update_zero_flag = (cpu, result) => {
   cpu.z = switch result {
@@ -109,7 +131,10 @@ let reset = cpu => {
   cpu.register_x = 0
   cpu.register_y = 0
   cpu.stack_pointer = 0
+  cpu.jumped = false
   vector_2_status(cpu, 0)
+  cpu.g = 1
+  cpu.i = 1
 
   cpu.pc = mem_read_2bytes(cpu, 0xFFFC)
   stack_reset(cpu)
@@ -139,7 +164,8 @@ let get_operand_address = (cpu, mode) =>
       } else {
         cpu.pc + addr - 256
       }
-      addr
+      // -1, since the pc have been move 1 in get_instruction
+      addr - 1
     }
   | ZeroPage => mem_read(cpu, cpu.pc)
   | Absolute => mem_read_2bytes(cpu, cpu.pc)
@@ -247,14 +273,17 @@ let lsr_ = (cpu, mode) => {
   cpu.c = land(val, 1)
   write_operand_to_mem_or_a(cpu, mode, lsr(val, 1))
 }
+// return whether the cpu have jumped
 let jmp_if_1 = (value, cpu, mode) => {
   if value === 1 {
     cpu.pc = get_operand_address(cpu, mode)
+    cpu.jumped = true
   }
 }
 let jmp_if_0 = (value, cpu, mode) => {
   if value === 0 {
     cpu.pc = get_operand_address(cpu, mode)
+    cpu.jumped = true
   }
 }
 
@@ -317,9 +346,14 @@ let inc = (cpu, mode) => {
 }
 let inx = cpu => cpu.register_x = increase(cpu, cpu.register_x)
 let iny = cpu => cpu.register_y = increase(cpu, cpu.register_y)
-let jmp = (cpu, mode) => {cpu.pc = get_operand_address(cpu, mode)}
-let jsr = (cpu, mode) => {
+let jmp = (cpu, mode) => {
   cpu.pc = get_operand_address(cpu, mode)
+  cpu.jumped = true
+}
+let jsr = (cpu, mode) => {
+  cpu->stack_push_2bytes(cpu.pc + 1)
+  cpu.pc = get_operand_address(cpu, mode)
+  cpu.jumped = true
 }
 let bit = (cpu, mode) => {
   let addr = get_operand_address(cpu, mode)
@@ -390,27 +424,7 @@ let load_to = (cpu, addr, program) => {
   }
   mem_write_2bytes(cpu, 0xFFFC, addr)
 }
-let load = (cpu, program) => {cpu->load_to(0x8000, program)}
-
-let stack_push = (cpu, data) => {
-  mem_write(cpu, cpu.stack + cpu.stack_pointer, data)
-  cpu.stack_pointer = land(cpu.stack_pointer - 1, 0xff)
-}
-let stack_push_2bytes = (cpu, data) => {
-  let hi = lsr(data, 8)
-  let lo = land(data, 0xff)
-  stack_push(cpu, hi)
-  stack_push(cpu, lo)
-}
-let stack_pop = cpu => {
-  cpu.stack_pointer = land(cpu.stack_pointer + 1, 0xff)
-  mem_read(cpu, cpu.stack + cpu.stack_pointer)
-}
-let stack_pop_2bytes = cpu => {
-  let lo = stack_pop(cpu)
-  let hi = stack_pop(cpu)
-  lor(lsl(hi, 8), lo)
-}
+let load = (cpu, program) => {cpu->load_to(0x6000, program)}
 
 let pc_safe = cpu => cpu.pc < Uint8Array.length(cpu.memory)
 let php = cpu => {
@@ -464,9 +478,16 @@ let rti = cpu => {
   cpu.b = 0
   cpu.g = 1
   cpu.pc = stack_pop_2bytes(cpu)
+  cpu.jumped = true
 }
 let rts = cpu => {
   cpu.pc = stack_pop_2bytes(cpu) + 1
+  cpu.jumped = true
+}
+let brk = cpu => {
+  cpu.i = 1
+  cpu->stack_push(cpu.pc + 1)
+  cpu->stack_push(cpu->status_2_vector)
 }
 let run_with_callback = (cpu, callback_list) => {
   let break = ref(false)
@@ -474,6 +495,7 @@ let run_with_callback = (cpu, callback_list) => {
     Array.iter(f => f(cpu), callback_list)
     let op = mem_read(cpu, cpu.pc)
     cpu.pc = cpu.pc + 1
+    cpu.jumped = false
     let instruction = Belt.HashMap.get(instruction_table, op)
     switch instruction {
     | None => raise(ErrorInstruction)
@@ -509,7 +531,7 @@ let run_with_callback = (cpu, callback_list) => {
       | BIT => bit(cpu, i.mode)
       | BRK => {
           break := true
-          cpu.i = 1
+          brk(cpu)
         }
       | LDA => lda(cpu, i.mode)
       | LDX => ldx(cpu, i.mode)
@@ -539,7 +561,10 @@ let run_with_callback = (cpu, callback_list) => {
       | RTI => rti(cpu)
       | RTS => rts(cpu)
       }
-      cpu.pc = cpu.pc + i.bytes - 1
+      switch cpu.jumped {
+      | false => cpu.pc = cpu.pc + i.bytes - 1
+      | _ => ()
+      }
     }
   }
 }
