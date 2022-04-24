@@ -12,11 +12,13 @@
     }
   ],
   "package-specs": {
-    "module": "commonjs",
-    "in-source": true
+    "module": "es6-global",
+    "in-source": false
   },
   "suffix": ".bs.js",
-  "bs-dependencies": [],
+  "bs-dependencies": [
+    "rescript-webapi"
+  ],
   "warnings": {
     "error": "+101"
   },

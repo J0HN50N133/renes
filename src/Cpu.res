@@ -107,6 +107,8 @@ let update_overflow_flag_and_prune_result = (cpu, result) => {
 let reset = cpu => {
   cpu.register_a = 0
   cpu.register_x = 0
+  cpu.register_y = 0
+  cpu.stack_pointer = 0
   vector_2_status(cpu, 0)
 
   cpu.pc = mem_read_2bytes(cpu, 0xFFFC)
@@ -380,14 +382,15 @@ let interpret = (cpu, program) => {
     }
   }
 }
-let load = (cpu, program) => {
-  cpu.pc = 0x8000
+let load_to = (cpu, addr, program) => {
+  cpu.pc = addr
   let len = Uint8Array.length(program)
   for i in 0 to len - 1 {
-    Uint8Array.unsafe_set(cpu.memory, i + 0x8000, Uint8Array.unsafe_get(program, i))
+    Uint8Array.unsafe_set(cpu.memory, i + addr, Uint8Array.unsafe_get(program, i))
   }
-  mem_write_2bytes(cpu, 0xFFFC, 0x8000)
+  mem_write_2bytes(cpu, 0xFFFC, addr)
 }
+let load = (cpu, program) => {cpu->load_to(0x8000, program)}
 
 let stack_push = (cpu, data) => {
   mem_write(cpu, cpu.stack + cpu.stack_pointer, data)
@@ -465,9 +468,10 @@ let rti = cpu => {
 let rts = cpu => {
   cpu.pc = stack_pop_2bytes(cpu) + 1
 }
-let run = cpu => {
+let run_with_callback = (cpu, callback_list) => {
   let break = ref(false)
   while !break.contents && pc_safe(cpu) {
+    Array.iter(f => f(cpu), callback_list)
     let op = mem_read(cpu, cpu.pc)
     cpu.pc = cpu.pc + 1
     let instruction = Belt.HashMap.get(instruction_table, op)
@@ -539,6 +543,7 @@ let run = cpu => {
     }
   }
 }
+let run = run_with_callback(_, [])
 let load_and_run = (cpu, program) => {
   load(cpu, program)
   reset(cpu)
