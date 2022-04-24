@@ -10,7 +10,29 @@ var UnSupportedAddressingMode = /* @__PURE__ */Caml_exceptions.create("Instructi
 
 var ErrorInstruction = /* @__PURE__ */Caml_exceptions.create("Instruction.ErrorInstruction");
 
-function $$new(bin, code, bytes, cycles, mode) {
+function $$new(bin, code, cycles, mode) {
+  var bytes;
+  switch (mode) {
+    case /* Absolute */5 :
+    case /* Absolute_X */6 :
+    case /* Absolute_Y */7 :
+    case /* Indirect */8 :
+        bytes = 3;
+        break;
+    case /* Immediate */0 :
+    case /* Relative */1 :
+    case /* ZeroPage */2 :
+    case /* ZeroPage_X */3 :
+    case /* ZeroPage_Y */4 :
+    case /* Indirect_X */9 :
+    case /* Indirect_Y */10 :
+        bytes = 2;
+        break;
+    case /* NoneAddressing */11 :
+        bytes = 1;
+        break;
+    
+  }
   return [
           bin,
           {
@@ -35,1516 +57,157 @@ var IntHash = Belt_Id.MakeHashable({
     });
 
 var instruction_table = Belt_HashMap.fromArray([
-      [
-        0,
-        {
-          bin: 0,
-          code: /* BRK */10,
-          bytes: 1,
-          cycles: 7,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        232,
-        {
-          bin: 232,
-          code: /* INX */25,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        200,
-        {
-          bin: 200,
-          code: /* INY */26,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        105,
-        {
-          bin: 105,
-          code: /* ADC */0,
-          bytes: 2,
-          cycles: 2,
-          mode: /* Immediate */0
-        }
-      ],
-      [
-        101,
-        {
-          bin: 101,
-          code: /* ADC */0,
-          bytes: 2,
-          cycles: 3,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        117,
-        {
-          bin: 117,
-          code: /* ADC */0,
-          bytes: 2,
-          cycles: 4,
-          mode: /* ZeroPage_X */3
-        }
-      ],
-      [
-        109,
-        {
-          bin: 109,
-          code: /* ADC */0,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        125,
-        {
-          bin: 125,
-          code: /* ADC */0,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute_X */6
-        }
-      ],
-      [
-        121,
-        {
-          bin: 121,
-          code: /* ADC */0,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute_Y */7
-        }
-      ],
-      [
-        97,
-        {
-          bin: 97,
-          code: /* ADC */0,
-          bytes: 2,
-          cycles: 6,
-          mode: /* Indirect_X */9
-        }
-      ],
-      [
-        113,
-        {
-          bin: 113,
-          code: /* ADC */0,
-          bytes: 2,
-          cycles: 5,
-          mode: /* Indirect_Y */10
-        }
-      ],
-      [
-        41,
-        {
-          bin: 41,
-          code: /* AND */1,
-          bytes: 2,
-          cycles: 2,
-          mode: /* Immediate */0
-        }
-      ],
-      [
-        37,
-        {
-          bin: 37,
-          code: /* AND */1,
-          bytes: 2,
-          cycles: 3,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        53,
-        {
-          bin: 53,
-          code: /* AND */1,
-          bytes: 2,
-          cycles: 4,
-          mode: /* ZeroPage_X */3
-        }
-      ],
-      [
-        45,
-        {
-          bin: 45,
-          code: /* AND */1,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        61,
-        {
-          bin: 61,
-          code: /* AND */1,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute_X */6
-        }
-      ],
-      [
-        57,
-        {
-          bin: 57,
-          code: /* AND */1,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute_Y */7
-        }
-      ],
-      [
-        33,
-        {
-          bin: 33,
-          code: /* AND */1,
-          bytes: 2,
-          cycles: 6,
-          mode: /* Indirect_X */9
-        }
-      ],
-      [
-        49,
-        {
-          bin: 49,
-          code: /* AND */1,
-          bytes: 2,
-          cycles: 5,
-          mode: /* Indirect_Y */10
-        }
-      ],
-      [
-        10,
-        {
-          bin: 10,
-          code: /* ASL */2,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        6,
-        {
-          bin: 6,
-          code: /* ASL */2,
-          bytes: 2,
-          cycles: 5,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        22,
-        {
-          bin: 22,
-          code: /* ASL */2,
-          bytes: 2,
-          cycles: 6,
-          mode: /* ZeroPage_X */3
-        }
-      ],
-      [
-        14,
-        {
-          bin: 14,
-          code: /* ASL */2,
-          bytes: 3,
-          cycles: 6,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        30,
-        {
-          bin: 30,
-          code: /* ASL */2,
-          bytes: 3,
-          cycles: 7,
-          mode: /* Absolute_X */6
-        }
-      ],
-      [
-        144,
-        {
-          bin: 144,
-          code: /* BCC */3,
-          bytes: 2,
-          cycles: 2,
-          mode: /* Relative */1
-        }
-      ],
-      [
-        176,
-        {
-          bin: 176,
-          code: /* BCS */4,
-          bytes: 2,
-          cycles: 2,
-          mode: /* Relative */1
-        }
-      ],
-      [
-        240,
-        {
-          bin: 240,
-          code: /* BEQ */5,
-          bytes: 2,
-          cycles: 2,
-          mode: /* Relative */1
-        }
-      ],
-      [
-        36,
-        {
-          bin: 36,
-          code: /* BIT */6,
-          bytes: 2,
-          cycles: 3,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        44,
-        {
-          bin: 44,
-          code: /* BIT */6,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        48,
-        {
-          bin: 48,
-          code: /* BMI */7,
-          bytes: 2,
-          cycles: 2,
-          mode: /* Relative */1
-        }
-      ],
-      [
-        208,
-        {
-          bin: 208,
-          code: /* BNE */8,
-          bytes: 2,
-          cycles: 2,
-          mode: /* Relative */1
-        }
-      ],
-      [
-        16,
-        {
-          bin: 16,
-          code: /* BPL */9,
-          bytes: 2,
-          cycles: 2,
-          mode: /* Relative */1
-        }
-      ],
-      [
-        80,
-        {
-          bin: 80,
-          code: /* BVC */11,
-          bytes: 2,
-          cycles: 2,
-          mode: /* Relative */1
-        }
-      ],
-      [
-        112,
-        {
-          bin: 112,
-          code: /* BVS */12,
-          bytes: 2,
-          cycles: 2,
-          mode: /* Relative */1
-        }
-      ],
-      [
-        24,
-        {
-          bin: 24,
-          code: /* CLC */13,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        216,
-        {
-          bin: 216,
-          code: /* CLD */14,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        88,
-        {
-          bin: 88,
-          code: /* CLI */15,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        184,
-        {
-          bin: 184,
-          code: /* CLV */16,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        201,
-        {
-          bin: 201,
-          code: /* CMP */17,
-          bytes: 2,
-          cycles: 2,
-          mode: /* Immediate */0
-        }
-      ],
-      [
-        197,
-        {
-          bin: 197,
-          code: /* CMP */17,
-          bytes: 2,
-          cycles: 3,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        213,
-        {
-          bin: 213,
-          code: /* CMP */17,
-          bytes: 2,
-          cycles: 4,
-          mode: /* ZeroPage_X */3
-        }
-      ],
-      [
-        205,
-        {
-          bin: 205,
-          code: /* CMP */17,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        221,
-        {
-          bin: 221,
-          code: /* CMP */17,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute_X */6
-        }
-      ],
-      [
-        217,
-        {
-          bin: 217,
-          code: /* CMP */17,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute_Y */7
-        }
-      ],
-      [
-        193,
-        {
-          bin: 193,
-          code: /* CMP */17,
-          bytes: 2,
-          cycles: 6,
-          mode: /* Indirect_X */9
-        }
-      ],
-      [
-        209,
-        {
-          bin: 209,
-          code: /* CMP */17,
-          bytes: 2,
-          cycles: 5,
-          mode: /* Indirect_Y */10
-        }
-      ],
-      [
-        224,
-        {
-          bin: 224,
-          code: /* CPX */18,
-          bytes: 2,
-          cycles: 2,
-          mode: /* Immediate */0
-        }
-      ],
-      [
-        228,
-        {
-          bin: 228,
-          code: /* CPX */18,
-          bytes: 2,
-          cycles: 3,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        236,
-        {
-          bin: 236,
-          code: /* CPX */18,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        192,
-        {
-          bin: 192,
-          code: /* CPY */19,
-          bytes: 2,
-          cycles: 2,
-          mode: /* Immediate */0
-        }
-      ],
-      [
-        196,
-        {
-          bin: 196,
-          code: /* CPY */19,
-          bytes: 2,
-          cycles: 3,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        204,
-        {
-          bin: 204,
-          code: /* CPY */19,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        198,
-        {
-          bin: 198,
-          code: /* DEC */20,
-          bytes: 2,
-          cycles: 5,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        214,
-        {
-          bin: 214,
-          code: /* DEC */20,
-          bytes: 2,
-          cycles: 6,
-          mode: /* ZeroPage_X */3
-        }
-      ],
-      [
-        206,
-        {
-          bin: 206,
-          code: /* DEC */20,
-          bytes: 3,
-          cycles: 6,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        222,
-        {
-          bin: 222,
-          code: /* DEC */20,
-          bytes: 3,
-          cycles: 7,
-          mode: /* Absolute_X */6
-        }
-      ],
-      [
-        202,
-        {
-          bin: 202,
-          code: /* DEX */21,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        136,
-        {
-          bin: 136,
-          code: /* DEY */22,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        73,
-        {
-          bin: 73,
-          code: /* EOR */23,
-          bytes: 2,
-          cycles: 2,
-          mode: /* Immediate */0
-        }
-      ],
-      [
-        69,
-        {
-          bin: 69,
-          code: /* EOR */23,
-          bytes: 2,
-          cycles: 3,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        85,
-        {
-          bin: 85,
-          code: /* EOR */23,
-          bytes: 2,
-          cycles: 4,
-          mode: /* ZeroPage_X */3
-        }
-      ],
-      [
-        77,
-        {
-          bin: 77,
-          code: /* EOR */23,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        93,
-        {
-          bin: 93,
-          code: /* EOR */23,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute_X */6
-        }
-      ],
-      [
-        89,
-        {
-          bin: 89,
-          code: /* EOR */23,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute_Y */7
-        }
-      ],
-      [
-        65,
-        {
-          bin: 65,
-          code: /* EOR */23,
-          bytes: 2,
-          cycles: 6,
-          mode: /* Indirect_Y */10
-        }
-      ],
-      [
-        81,
-        {
-          bin: 81,
-          code: /* EOR */23,
-          bytes: 2,
-          cycles: 5,
-          mode: /* Indirect_Y */10
-        }
-      ],
-      [
-        230,
-        {
-          bin: 230,
-          code: /* INC */24,
-          bytes: 2,
-          cycles: 5,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        246,
-        {
-          bin: 246,
-          code: /* INC */24,
-          bytes: 2,
-          cycles: 6,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        238,
-        {
-          bin: 238,
-          code: /* INC */24,
-          bytes: 3,
-          cycles: 6,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        254,
-        {
-          bin: 254,
-          code: /* INC */24,
-          bytes: 3,
-          cycles: 7,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        232,
-        {
-          bin: 232,
-          code: /* INX */25,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        200,
-        {
-          bin: 200,
-          code: /* INY */26,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        76,
-        {
-          bin: 76,
-          code: /* JMP */27,
-          bytes: 3,
-          cycles: 3,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        108,
-        {
-          bin: 108,
-          code: /* JMP */27,
-          bytes: 3,
-          cycles: 5,
-          mode: /* Indirect */8
-        }
-      ],
-      [
-        32,
-        {
-          bin: 32,
-          code: /* JSR */28,
-          bytes: 3,
-          cycles: 6,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        169,
-        {
-          bin: 169,
-          code: /* LDA */29,
-          bytes: 2,
-          cycles: 2,
-          mode: /* Immediate */0
-        }
-      ],
-      [
-        165,
-        {
-          bin: 165,
-          code: /* LDA */29,
-          bytes: 2,
-          cycles: 3,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        181,
-        {
-          bin: 181,
-          code: /* LDA */29,
-          bytes: 2,
-          cycles: 4,
-          mode: /* ZeroPage_X */3
-        }
-      ],
-      [
-        173,
-        {
-          bin: 173,
-          code: /* LDA */29,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        189,
-        {
-          bin: 189,
-          code: /* LDA */29,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute_X */6
-        }
-      ],
-      [
-        185,
-        {
-          bin: 185,
-          code: /* LDA */29,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute_Y */7
-        }
-      ],
-      [
-        161,
-        {
-          bin: 161,
-          code: /* LDA */29,
-          bytes: 2,
-          cycles: 6,
-          mode: /* Indirect_X */9
-        }
-      ],
-      [
-        177,
-        {
-          bin: 177,
-          code: /* LDA */29,
-          bytes: 2,
-          cycles: 5,
-          mode: /* Indirect_Y */10
-        }
-      ],
-      [
-        162,
-        {
-          bin: 162,
-          code: /* LDX */30,
-          bytes: 2,
-          cycles: 2,
-          mode: /* Immediate */0
-        }
-      ],
-      [
-        166,
-        {
-          bin: 166,
-          code: /* LDX */30,
-          bytes: 2,
-          cycles: 3,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        182,
-        {
-          bin: 182,
-          code: /* LDX */30,
-          bytes: 2,
-          cycles: 4,
-          mode: /* ZeroPage_Y */4
-        }
-      ],
-      [
-        174,
-        {
-          bin: 174,
-          code: /* LDX */30,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        190,
-        {
-          bin: 190,
-          code: /* LDX */30,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute_Y */7
-        }
-      ],
-      [
-        160,
-        {
-          bin: 160,
-          code: /* LDY */31,
-          bytes: 2,
-          cycles: 2,
-          mode: /* Immediate */0
-        }
-      ],
-      [
-        164,
-        {
-          bin: 164,
-          code: /* LDY */31,
-          bytes: 2,
-          cycles: 3,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        180,
-        {
-          bin: 180,
-          code: /* LDY */31,
-          bytes: 2,
-          cycles: 4,
-          mode: /* ZeroPage_Y */4
-        }
-      ],
-      [
-        172,
-        {
-          bin: 172,
-          code: /* LDY */31,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        188,
-        {
-          bin: 188,
-          code: /* LDY */31,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute_Y */7
-        }
-      ],
-      [
-        74,
-        {
-          bin: 74,
-          code: /* LSR */32,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        70,
-        {
-          bin: 70,
-          code: /* LSR */32,
-          bytes: 2,
-          cycles: 5,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        86,
-        {
-          bin: 86,
-          code: /* LSR */32,
-          bytes: 2,
-          cycles: 6,
-          mode: /* ZeroPage_X */3
-        }
-      ],
-      [
-        78,
-        {
-          bin: 78,
-          code: /* LSR */32,
-          bytes: 3,
-          cycles: 6,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        94,
-        {
-          bin: 94,
-          code: /* LSR */32,
-          bytes: 3,
-          cycles: 7,
-          mode: /* Absolute_X */6
-        }
-      ],
-      [
-        234,
-        {
-          bin: 234,
-          code: /* NOP */33,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        9,
-        {
-          bin: 9,
-          code: /* ORA */34,
-          bytes: 2,
-          cycles: 2,
-          mode: /* Immediate */0
-        }
-      ],
-      [
-        5,
-        {
-          bin: 5,
-          code: /* ORA */34,
-          bytes: 2,
-          cycles: 3,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        21,
-        {
-          bin: 21,
-          code: /* ORA */34,
-          bytes: 2,
-          cycles: 4,
-          mode: /* ZeroPage_X */3
-        }
-      ],
-      [
-        13,
-        {
-          bin: 13,
-          code: /* ORA */34,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        29,
-        {
-          bin: 29,
-          code: /* ORA */34,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute_X */6
-        }
-      ],
-      [
-        25,
-        {
-          bin: 25,
-          code: /* ORA */34,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute_Y */7
-        }
-      ],
-      [
-        1,
-        {
-          bin: 1,
-          code: /* ORA */34,
-          bytes: 2,
-          cycles: 6,
-          mode: /* Indirect_X */9
-        }
-      ],
-      [
-        17,
-        {
-          bin: 17,
-          code: /* ORA */34,
-          bytes: 2,
-          cycles: 5,
-          mode: /* Indirect_Y */10
-        }
-      ],
-      [
-        72,
-        {
-          bin: 72,
-          code: /* PHA */35,
-          bytes: 1,
-          cycles: 3,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        8,
-        {
-          bin: 8,
-          code: /* PHP */36,
-          bytes: 1,
-          cycles: 3,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        104,
-        {
-          bin: 104,
-          code: /* PLA */37,
-          bytes: 1,
-          cycles: 4,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        40,
-        {
-          bin: 40,
-          code: /* ROL */39,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        42,
-        {
-          bin: 42,
-          code: /* ROL */39,
-          bytes: 2,
-          cycles: 5,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        38,
-        {
-          bin: 38,
-          code: /* ROL */39,
-          bytes: 2,
-          cycles: 6,
-          mode: /* ZeroPage_X */3
-        }
-      ],
-      [
-        54,
-        {
-          bin: 54,
-          code: /* ROL */39,
-          bytes: 3,
-          cycles: 6,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        46,
-        {
-          bin: 46,
-          code: /* ROL */39,
-          bytes: 3,
-          cycles: 7,
-          mode: /* Absolute_X */6
-        }
-      ],
-      [
-        106,
-        {
-          bin: 106,
-          code: /* ROR */40,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        102,
-        {
-          bin: 102,
-          code: /* ROR */40,
-          bytes: 2,
-          cycles: 5,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        118,
-        {
-          bin: 118,
-          code: /* ROR */40,
-          bytes: 2,
-          cycles: 6,
-          mode: /* ZeroPage_X */3
-        }
-      ],
-      [
-        110,
-        {
-          bin: 110,
-          code: /* ROR */40,
-          bytes: 3,
-          cycles: 6,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        126,
-        {
-          bin: 126,
-          code: /* ROR */40,
-          bytes: 3,
-          cycles: 7,
-          mode: /* Absolute_X */6
-        }
-      ],
-      [
-        64,
-        {
-          bin: 64,
-          code: /* RTI */41,
-          bytes: 1,
-          cycles: 6,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        96,
-        {
-          bin: 96,
-          code: /* RTS */42,
-          bytes: 1,
-          cycles: 6,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        249,
-        {
-          bin: 249,
-          code: /* SBC */43,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Immediate */0
-        }
-      ],
-      [
-        233,
-        {
-          bin: 233,
-          code: /* SBC */43,
-          bytes: 2,
-          cycles: 2,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        229,
-        {
-          bin: 229,
-          code: /* SBC */43,
-          bytes: 2,
-          cycles: 3,
-          mode: /* ZeroPage_X */3
-        }
-      ],
-      [
-        245,
-        {
-          bin: 245,
-          code: /* SBC */43,
-          bytes: 2,
-          cycles: 4,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        237,
-        {
-          bin: 237,
-          code: /* SBC */43,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute_X */6
-        }
-      ],
-      [
-        253,
-        {
-          bin: 253,
-          code: /* SBC */43,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute_Y */7
-        }
-      ],
-      [
-        225,
-        {
-          bin: 225,
-          code: /* SBC */43,
-          bytes: 2,
-          cycles: 6,
-          mode: /* Indirect_X */9
-        }
-      ],
-      [
-        241,
-        {
-          bin: 241,
-          code: /* SBC */43,
-          bytes: 2,
-          cycles: 5,
-          mode: /* Indirect_Y */10
-        }
-      ],
-      [
-        56,
-        {
-          bin: 56,
-          code: /* SEC */44,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        248,
-        {
-          bin: 248,
-          code: /* SED */45,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        120,
-        {
-          bin: 120,
-          code: /* SEI */46,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        133,
-        {
-          bin: 133,
-          code: /* STA */47,
-          bytes: 2,
-          cycles: 3,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        149,
-        {
-          bin: 149,
-          code: /* STA */47,
-          bytes: 2,
-          cycles: 4,
-          mode: /* ZeroPage_X */3
-        }
-      ],
-      [
-        141,
-        {
-          bin: 141,
-          code: /* STA */47,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        157,
-        {
-          bin: 157,
-          code: /* STA */47,
-          bytes: 3,
-          cycles: 5,
-          mode: /* Absolute_X */6
-        }
-      ],
-      [
-        153,
-        {
-          bin: 153,
-          code: /* STA */47,
-          bytes: 3,
-          cycles: 5,
-          mode: /* Absolute_Y */7
-        }
-      ],
-      [
-        129,
-        {
-          bin: 129,
-          code: /* STA */47,
-          bytes: 2,
-          cycles: 6,
-          mode: /* Indirect_X */9
-        }
-      ],
-      [
-        145,
-        {
-          bin: 145,
-          code: /* STA */47,
-          bytes: 2,
-          cycles: 6,
-          mode: /* Indirect_Y */10
-        }
-      ],
-      [
-        134,
-        {
-          bin: 134,
-          code: /* STX */48,
-          bytes: 2,
-          cycles: 3,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        150,
-        {
-          bin: 150,
-          code: /* STX */48,
-          bytes: 2,
-          cycles: 4,
-          mode: /* ZeroPage_Y */4
-        }
-      ],
-      [
-        142,
-        {
-          bin: 142,
-          code: /* STX */48,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        134,
-        {
-          bin: 134,
-          code: /* STY */49,
-          bytes: 2,
-          cycles: 3,
-          mode: /* ZeroPage */2
-        }
-      ],
-      [
-        150,
-        {
-          bin: 150,
-          code: /* STY */49,
-          bytes: 2,
-          cycles: 4,
-          mode: /* ZeroPage_X */3
-        }
-      ],
-      [
-        142,
-        {
-          bin: 142,
-          code: /* STY */49,
-          bytes: 3,
-          cycles: 4,
-          mode: /* Absolute */5
-        }
-      ],
-      [
-        170,
-        {
-          bin: 170,
-          code: /* TAX */50,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        168,
-        {
-          bin: 168,
-          code: /* TAY */51,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        138,
-        {
-          bin: 138,
-          code: /* TXA */53,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        154,
-        {
-          bin: 154,
-          code: /* TXS */54,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ],
-      [
-        152,
-        {
-          bin: 152,
-          code: /* TYA */55,
-          bytes: 1,
-          cycles: 2,
-          mode: /* NoneAddressing */11
-        }
-      ]
+      $$new(0, /* BRK */10, 7, /* NoneAddressing */11),
+      $$new(232, /* INX */25, 2, /* NoneAddressing */11),
+      $$new(200, /* INY */26, 2, /* NoneAddressing */11),
+      $$new(105, /* ADC */0, 2, /* Immediate */0),
+      $$new(101, /* ADC */0, 3, /* ZeroPage */2),
+      $$new(117, /* ADC */0, 4, /* ZeroPage_X */3),
+      $$new(109, /* ADC */0, 4, /* Absolute */5),
+      $$new(125, /* ADC */0, 4, /* Absolute_X */6),
+      $$new(121, /* ADC */0, 4, /* Absolute_Y */7),
+      $$new(97, /* ADC */0, 6, /* Indirect_X */9),
+      $$new(113, /* ADC */0, 5, /* Indirect_Y */10),
+      $$new(41, /* AND */1, 2, /* Immediate */0),
+      $$new(37, /* AND */1, 3, /* ZeroPage */2),
+      $$new(53, /* AND */1, 4, /* ZeroPage_X */3),
+      $$new(45, /* AND */1, 4, /* Absolute */5),
+      $$new(61, /* AND */1, 4, /* Absolute_X */6),
+      $$new(57, /* AND */1, 4, /* Absolute_Y */7),
+      $$new(33, /* AND */1, 6, /* Indirect_X */9),
+      $$new(49, /* AND */1, 5, /* Indirect_Y */10),
+      $$new(10, /* ASL */2, 2, /* NoneAddressing */11),
+      $$new(6, /* ASL */2, 5, /* ZeroPage */2),
+      $$new(22, /* ASL */2, 6, /* ZeroPage_X */3),
+      $$new(14, /* ASL */2, 6, /* Absolute */5),
+      $$new(30, /* ASL */2, 7, /* Absolute_X */6),
+      $$new(144, /* BCC */3, 2, /* Relative */1),
+      $$new(176, /* BCS */4, 2, /* Relative */1),
+      $$new(240, /* BEQ */5, 2, /* Relative */1),
+      $$new(36, /* BIT */6, 3, /* ZeroPage */2),
+      $$new(44, /* BIT */6, 4, /* Absolute */5),
+      $$new(48, /* BMI */7, 2, /* Relative */1),
+      $$new(208, /* BNE */8, 2, /* Relative */1),
+      $$new(16, /* BPL */9, 2, /* Relative */1),
+      $$new(80, /* BVC */11, 2, /* Relative */1),
+      $$new(112, /* BVS */12, 2, /* Relative */1),
+      $$new(24, /* CLC */13, 2, /* NoneAddressing */11),
+      $$new(216, /* CLD */14, 2, /* NoneAddressing */11),
+      $$new(88, /* CLI */15, 2, /* NoneAddressing */11),
+      $$new(184, /* CLV */16, 2, /* NoneAddressing */11),
+      $$new(201, /* CMP */17, 2, /* Immediate */0),
+      $$new(197, /* CMP */17, 3, /* ZeroPage */2),
+      $$new(213, /* CMP */17, 4, /* ZeroPage_X */3),
+      $$new(205, /* CMP */17, 4, /* Absolute */5),
+      $$new(221, /* CMP */17, 4, /* Absolute_X */6),
+      $$new(217, /* CMP */17, 4, /* Absolute_Y */7),
+      $$new(193, /* CMP */17, 6, /* Indirect_X */9),
+      $$new(209, /* CMP */17, 5, /* Indirect_Y */10),
+      $$new(224, /* CPX */18, 2, /* Immediate */0),
+      $$new(228, /* CPX */18, 3, /* ZeroPage */2),
+      $$new(236, /* CPX */18, 4, /* Absolute */5),
+      $$new(192, /* CPY */19, 2, /* Immediate */0),
+      $$new(196, /* CPY */19, 3, /* ZeroPage */2),
+      $$new(204, /* CPY */19, 4, /* Absolute */5),
+      $$new(198, /* DEC */20, 5, /* ZeroPage */2),
+      $$new(214, /* DEC */20, 6, /* ZeroPage_X */3),
+      $$new(206, /* DEC */20, 6, /* Absolute */5),
+      $$new(222, /* DEC */20, 7, /* Absolute_X */6),
+      $$new(202, /* DEX */21, 2, /* NoneAddressing */11),
+      $$new(136, /* DEY */22, 2, /* NoneAddressing */11),
+      $$new(73, /* EOR */23, 2, /* Immediate */0),
+      $$new(69, /* EOR */23, 3, /* ZeroPage */2),
+      $$new(85, /* EOR */23, 4, /* ZeroPage_X */3),
+      $$new(77, /* EOR */23, 4, /* Absolute */5),
+      $$new(93, /* EOR */23, 4, /* Absolute_X */6),
+      $$new(89, /* EOR */23, 4, /* Absolute_Y */7),
+      $$new(65, /* EOR */23, 6, /* Indirect_Y */10),
+      $$new(81, /* EOR */23, 5, /* Indirect_Y */10),
+      $$new(230, /* INC */24, 5, /* ZeroPage */2),
+      $$new(246, /* INC */24, 6, /* ZeroPage_X */3),
+      $$new(238, /* INC */24, 6, /* Absolute */5),
+      $$new(254, /* INC */24, 7, /* Absolute_X */6),
+      $$new(232, /* INX */25, 2, /* NoneAddressing */11),
+      $$new(200, /* INY */26, 2, /* NoneAddressing */11),
+      $$new(76, /* JMP */27, 3, /* Absolute */5),
+      $$new(108, /* JMP */27, 5, /* Indirect */8),
+      $$new(32, /* JSR */28, 6, /* Absolute */5),
+      $$new(169, /* LDA */29, 2, /* Immediate */0),
+      $$new(165, /* LDA */29, 3, /* ZeroPage */2),
+      $$new(181, /* LDA */29, 4, /* ZeroPage_X */3),
+      $$new(173, /* LDA */29, 4, /* Absolute */5),
+      $$new(189, /* LDA */29, 4, /* Absolute_X */6),
+      $$new(185, /* LDA */29, 4, /* Absolute_Y */7),
+      $$new(161, /* LDA */29, 6, /* Indirect_X */9),
+      $$new(177, /* LDA */29, 5, /* Indirect_Y */10),
+      $$new(162, /* LDX */30, 2, /* Immediate */0),
+      $$new(166, /* LDX */30, 3, /* ZeroPage */2),
+      $$new(182, /* LDX */30, 4, /* ZeroPage_Y */4),
+      $$new(174, /* LDX */30, 4, /* Absolute */5),
+      $$new(190, /* LDX */30, 4, /* Absolute_Y */7),
+      $$new(160, /* LDY */31, 2, /* Immediate */0),
+      $$new(164, /* LDY */31, 3, /* ZeroPage */2),
+      $$new(180, /* LDY */31, 4, /* ZeroPage_Y */4),
+      $$new(172, /* LDY */31, 4, /* Absolute */5),
+      $$new(188, /* LDY */31, 4, /* Absolute_Y */7),
+      $$new(74, /* LSR */32, 2, /* NoneAddressing */11),
+      $$new(70, /* LSR */32, 5, /* ZeroPage */2),
+      $$new(86, /* LSR */32, 6, /* ZeroPage_X */3),
+      $$new(78, /* LSR */32, 6, /* Absolute */5),
+      $$new(94, /* LSR */32, 7, /* Absolute_X */6),
+      $$new(234, /* NOP */33, 2, /* NoneAddressing */11),
+      $$new(9, /* ORA */34, 2, /* Immediate */0),
+      $$new(5, /* ORA */34, 3, /* ZeroPage */2),
+      $$new(21, /* ORA */34, 4, /* ZeroPage_X */3),
+      $$new(13, /* ORA */34, 4, /* Absolute */5),
+      $$new(29, /* ORA */34, 4, /* Absolute_X */6),
+      $$new(25, /* ORA */34, 4, /* Absolute_Y */7),
+      $$new(1, /* ORA */34, 6, /* Indirect_X */9),
+      $$new(17, /* ORA */34, 5, /* Indirect_Y */10),
+      $$new(72, /* PHA */35, 3, /* NoneAddressing */11),
+      $$new(8, /* PHP */36, 3, /* NoneAddressing */11),
+      $$new(104, /* PLA */37, 4, /* NoneAddressing */11),
+      $$new(40, /* ROL */39, 2, /* NoneAddressing */11),
+      $$new(42, /* ROL */39, 5, /* ZeroPage */2),
+      $$new(38, /* ROL */39, 6, /* ZeroPage_X */3),
+      $$new(54, /* ROL */39, 6, /* Absolute */5),
+      $$new(46, /* ROL */39, 7, /* Absolute_X */6),
+      $$new(106, /* ROR */40, 2, /* NoneAddressing */11),
+      $$new(102, /* ROR */40, 5, /* ZeroPage */2),
+      $$new(118, /* ROR */40, 6, /* ZeroPage_X */3),
+      $$new(110, /* ROR */40, 6, /* Absolute */5),
+      $$new(126, /* ROR */40, 7, /* Absolute_X */6),
+      $$new(64, /* RTI */41, 6, /* NoneAddressing */11),
+      $$new(96, /* RTS */42, 6, /* NoneAddressing */11),
+      $$new(249, /* SBC */43, 4, /* Immediate */0),
+      $$new(233, /* SBC */43, 2, /* ZeroPage */2),
+      $$new(229, /* SBC */43, 3, /* ZeroPage_X */3),
+      $$new(245, /* SBC */43, 4, /* Absolute */5),
+      $$new(237, /* SBC */43, 4, /* Absolute_X */6),
+      $$new(253, /* SBC */43, 4, /* Absolute_Y */7),
+      $$new(225, /* SBC */43, 6, /* Indirect_X */9),
+      $$new(241, /* SBC */43, 5, /* Indirect_Y */10),
+      $$new(56, /* SEC */44, 2, /* NoneAddressing */11),
+      $$new(248, /* SED */45, 2, /* NoneAddressing */11),
+      $$new(120, /* SEI */46, 2, /* NoneAddressing */11),
+      $$new(133, /* STA */47, 3, /* ZeroPage */2),
+      $$new(149, /* STA */47, 4, /* ZeroPage_X */3),
+      $$new(141, /* STA */47, 4, /* Absolute */5),
+      $$new(157, /* STA */47, 5, /* Absolute_X */6),
+      $$new(153, /* STA */47, 5, /* Absolute_Y */7),
+      $$new(129, /* STA */47, 6, /* Indirect_X */9),
+      $$new(145, /* STA */47, 6, /* Indirect_Y */10),
+      $$new(134, /* STX */48, 3, /* ZeroPage */2),
+      $$new(150, /* STX */48, 4, /* ZeroPage_Y */4),
+      $$new(142, /* STX */48, 4, /* Absolute */5),
+      $$new(134, /* STY */49, 3, /* ZeroPage */2),
+      $$new(150, /* STY */49, 4, /* ZeroPage_X */3),
+      $$new(142, /* STY */49, 4, /* Absolute */5),
+      $$new(170, /* TAX */50, 2, /* NoneAddressing */11),
+      $$new(168, /* TAY */51, 2, /* NoneAddressing */11),
+      $$new(138, /* TXA */53, 2, /* NoneAddressing */11),
+      $$new(154, /* TXS */54, 2, /* NoneAddressing */11),
+      $$new(152, /* TYA */55, 2, /* NoneAddressing */11)
     ], IntHash);
 
 exports.UnSupportedAddressingMode = UnSupportedAddressingMode;
