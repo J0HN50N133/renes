@@ -135,6 +135,7 @@ let reset = cpu => {
   vector_2_status(cpu, 0)
   cpu.g = 1
   cpu.i = 1
+  cpu.b = 1
 
   cpu.pc = mem_read_2bytes(cpu, 0xFFFC)
   stack_reset(cpu)
@@ -165,7 +166,7 @@ let get_operand_address = (cpu, mode) =>
         cpu.pc + addr - 256
       }
       // -1, since the pc have been move 1 in get_instruction
-      addr - 1
+      addr + 1
     }
   | ZeroPage => mem_read(cpu, cpu.pc)
   | Absolute => mem_read_2bytes(cpu, cpu.pc)
@@ -424,12 +425,13 @@ let load_to = (cpu, addr, program) => {
   }
   mem_write_2bytes(cpu, 0xFFFC, addr)
 }
-let load = (cpu, program) => {cpu->load_to(0x6000, program)}
+let load = (cpu, program) => {cpu->load_to(0x0600, program)}
 
 let pc_safe = cpu => cpu.pc < Uint8Array.length(cpu.memory)
 let php = cpu => {
   let vector = status_2_vector(cpu)
   cpu.g = 1
+  cpu.b = 1
   stack_push(cpu, vector)
 }
 let pla = cpu => {
@@ -440,6 +442,7 @@ let plp = cpu => {
   let g = cpu.g
   let vector = stack_pop(cpu)
   vector_2_status(cpu, vector)
+  cpu.b = 0
   cpu.g = g
 }
 // A - M - ~C == A - M + C - 1
@@ -489,83 +492,87 @@ let brk = cpu => {
   cpu->stack_push(cpu.pc + 1)
   cpu->stack_push(cpu->status_2_vector)
 }
+let step = (cpu, callback_list, break) => {
+  Array.iter(f => f(cpu), callback_list)
+  let op = mem_read(cpu, cpu.pc)
+  cpu.pc = cpu.pc + 1
+  cpu.jumped = false
+  let instruction = Belt.HashMap.get(instruction_table, op)
+  switch instruction {
+  | None => raise(ErrorInstruction)
+  | Some(i) =>
+    switch i.code {
+    | ADC => adc(cpu, i.mode)
+    | AND => and_(cpu, i.mode)
+    | ASL => asl(cpu, i.mode)
+    | BCC => bcc(cpu, i.mode)
+    | BCS => bcs(cpu, i.mode)
+    | BEQ => beq(cpu, i.mode)
+    | BMI => bmi(cpu, i.mode)
+    | BNE => bne(cpu, i.mode)
+    | BPL => bpl(cpu, i.mode)
+    | BVC => bvc(cpu, i.mode)
+    | BVS => bvs(cpu, i.mode)
+    | CLC => clc(cpu)
+    | CLD => cld(cpu)
+    | CLI => cli(cpu)
+    | CLV => clv(cpu)
+    | CMP => cmp(cpu, i.mode)
+    | CPX => cpx(cpu, i.mode)
+    | CPY => cpy(cpu, i.mode)
+    | DEC => dec(cpu, i.mode)
+    | DEX => dex(cpu)
+    | DEY => dey(cpu)
+    | EOR => eor(cpu, i.mode)
+    | INC => inc(cpu, i.mode)
+    | INX => inx(cpu)
+    | INY => iny(cpu)
+    | JMP => jmp(cpu, i.mode)
+    | JSR => jsr(cpu, i.mode)
+    | BIT => bit(cpu, i.mode)
+    | BRK => {
+        break := true
+        brk(cpu)
+      }
+    | LDA => lda(cpu, i.mode)
+    | LDX => ldx(cpu, i.mode)
+    | LDY => ldy(cpu, i.mode)
+    | TAX => tax(cpu)
+    | TAY => tay(cpu)
+    | TYA => tya(cpu)
+    | TXA => txa(cpu)
+    | TXS => txs(cpu)
+    | TSX => tsx(cpu)
+    | STA => sta(cpu, i.mode)
+    | STX => stx(cpu, i.mode)
+    | STY => sty(cpu, i.mode)
+    | LSR => lsr_(cpu, i.mode)
+    | ORA => ora(cpu, i.mode)
+    | PHA => stack_push(cpu, cpu.register_a)
+    | PHP => php(cpu)
+    | PLA => pla(cpu)
+    | PLP => plp(cpu)
+    | ROL => rol(cpu, i.mode)
+    | ROR => ror(cpu, i.mode)
+    | SEC => cpu.c = 1
+    | SED => cpu.d = 1
+    | SEI => cpu.i = 1
+    | SBC => sbc(cpu, i.mode)
+    | NOP => ()
+    | RTI => rti(cpu)
+    | RTS => rts(cpu)
+    }
+    switch cpu.jumped {
+    | false => cpu.pc = cpu.pc + i.bytes - 1
+    | _ => ()
+    }
+  }
+}
+
 let run_with_callback = (cpu, callback_list) => {
   let break = ref(false)
   while !break.contents && pc_safe(cpu) {
-    Array.iter(f => f(cpu), callback_list)
-    let op = mem_read(cpu, cpu.pc)
-    cpu.pc = cpu.pc + 1
-    cpu.jumped = false
-    let instruction = Belt.HashMap.get(instruction_table, op)
-    switch instruction {
-    | None => raise(ErrorInstruction)
-    | Some(i) =>
-      switch i.code {
-      | ADC => adc(cpu, i.mode)
-      | AND => and_(cpu, i.mode)
-      | ASL => asl(cpu, i.mode)
-      | BCC => bcc(cpu, i.mode)
-      | BCS => bcs(cpu, i.mode)
-      | BEQ => beq(cpu, i.mode)
-      | BMI => bmi(cpu, i.mode)
-      | BNE => bne(cpu, i.mode)
-      | BPL => bpl(cpu, i.mode)
-      | BVC => bvc(cpu, i.mode)
-      | BVS => bvs(cpu, i.mode)
-      | CLC => clc(cpu)
-      | CLD => cld(cpu)
-      | CLI => cli(cpu)
-      | CLV => clv(cpu)
-      | CMP => cmp(cpu, i.mode)
-      | CPX => cpx(cpu, i.mode)
-      | CPY => cpy(cpu, i.mode)
-      | DEC => dec(cpu, i.mode)
-      | DEX => dex(cpu)
-      | DEY => dey(cpu)
-      | EOR => eor(cpu, i.mode)
-      | INC => inc(cpu, i.mode)
-      | INX => inx(cpu)
-      | INY => iny(cpu)
-      | JMP => jmp(cpu, i.mode)
-      | JSR => jsr(cpu, i.mode)
-      | BIT => bit(cpu, i.mode)
-      | BRK => {
-          break := true
-          brk(cpu)
-        }
-      | LDA => lda(cpu, i.mode)
-      | LDX => ldx(cpu, i.mode)
-      | LDY => ldy(cpu, i.mode)
-      | TAX => tax(cpu)
-      | TAY => tay(cpu)
-      | TYA => tya(cpu)
-      | TXA => txa(cpu)
-      | TXS => txs(cpu)
-      | TSX => tsx(cpu)
-      | STA => sta(cpu, i.mode)
-      | STX => stx(cpu, i.mode)
-      | STY => sty(cpu, i.mode)
-      | LSR => lsr_(cpu, i.mode)
-      | ORA => ora(cpu, i.mode)
-      | PHA => stack_push(cpu, cpu.register_a)
-      | PHP => php(cpu)
-      | PLA => pla(cpu)
-      | PLP => plp(cpu)
-      | ROL => rol(cpu, i.mode)
-      | ROR => ror(cpu, i.mode)
-      | SEC => cpu.c = 1
-      | SED => cpu.d = 1
-      | SEI => cpu.i = 1
-      | SBC => sbc(cpu, i.mode)
-      | NOP => ()
-      | RTI => rti(cpu)
-      | RTS => rts(cpu)
-      }
-      switch cpu.jumped {
-      | false => cpu.pc = cpu.pc + i.bytes - 1
-      | _ => ()
-      }
-    }
+    cpu->step(callback_list, break)
   }
 }
 let run = run_with_callback(_, [])
