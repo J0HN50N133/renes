@@ -17,7 +17,6 @@ type cpu = {
   mutable register_y: int,
   mutable stack_pointer: int,
   mutable pc: int,
-  mutable memory: Uint8Array.t,
   mutable stack: int,
   mutable jumped: bool, // whether pc just jump from other place
   mutable n: int,
@@ -28,6 +27,7 @@ type cpu = {
   mutable i: int,
   mutable z: int,
   mutable c: int,
+  bus: Bus.bus,
 }
 let stack_init_val = 0xfd
 let stack_reset = cpu => cpu.stack = stack_init_val
@@ -54,7 +54,7 @@ let new = () => {
     register_y: 0,
     stack_pointer: 0,
     pc: 0,
-    memory: Uint8Array.fromBuffer(ArrayBuffer.make(0xFFFF)),
+    bus: Bus.new(),
     stack: stack_init_val,
     jumped: false,
     n: 0,
@@ -67,19 +67,22 @@ let new = () => {
     c: 0,
   }
 }
-let mem_read = (cpu, addr) => Uint8Array.unsafe_get(cpu.memory, addr)
+let mem_read = (cpu, addr) => {
+  open Bus
+  cpu.bus->mem_read(addr)
+}
 let mem_read_2bytes = (cpu, addr) => {
-  let lo = mem_read(cpu, addr)
-  let hi = mem_read(cpu, addr + 1)
-  lor(lsl(hi, 8), lo)
+  open Bus
+  cpu.bus->mem_read_2bytes(addr)
 }
 /* mem_write: write [data] to the [addr] of [cpu]'s memory */
-let mem_write = (cpu, addr, data) => Uint8Array.unsafe_set(cpu.memory, addr, data)
+let mem_write = (cpu, addr, data) => {
+  open Bus
+  cpu.bus->mem_write(addr, data)
+}
 let mem_write_2bytes = (cpu, addr, data) => {
-  let hi = lsr(data, 8)
-  let lo = land(data, 0xff)
-  mem_write(cpu, addr, lo)
-  mem_write(cpu, addr + 1, hi)
+  open Bus
+  cpu.bus->mem_write_2bytes(addr, data)
 }
 
 let stack_push = (cpu, data) => {
@@ -392,7 +395,6 @@ let stx = (cpu, mode) => store(cpu, mode, cpu.register_x)
 let sty = (cpu, mode) => store(cpu, mode, cpu.register_y)
 let interpret = (cpu, program) => {
   cpu.pc = 0
-  cpu.memory = program
   let break = ref(false)
   while !break.contents {
     let op = mem_read(cpu, cpu.pc)
@@ -421,13 +423,13 @@ let load_to = (cpu, addr, program) => {
   cpu.pc = addr
   let len = Uint8Array.length(program)
   for i in 0 to len - 1 {
-    Uint8Array.unsafe_set(cpu.memory, i + addr, Uint8Array.unsafe_get(program, i))
+    cpu->mem_write(addr + i, Uint8Array.unsafe_get(program, i))
   }
   mem_write_2bytes(cpu, 0xFFFC, addr)
 }
 let load = (cpu, program) => {cpu->load_to(0x0600, program)}
 
-let pc_safe = cpu => cpu.pc < Uint8Array.length(cpu.memory)
+let pc_safe = cpu => cpu.pc <= Bus.ram_mirrors_end
 let php = cpu => {
   let vector = status_2_vector(cpu)
   cpu.g = 1

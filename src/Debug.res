@@ -1,6 +1,5 @@
 open Cpu
 open Instruction
-open Js.TypedArray2
 
 let hexdump = i => i->Js.Int.toStringWithRadix(~radix=16)
 let bindump = i => i->Js.Int.toStringWithRadix(~radix=2)
@@ -10,7 +9,6 @@ type info = {
   mutable x: string,
   mutable y: string,
   mutable op_code: string,
-  mutable stack: Uint8Array.t,
   mutable status: string,
 }
 exception RunTooMuch
@@ -22,7 +20,6 @@ let debug_limit = (cpu: Cpu.cpu, limit: int) => {
     x: "",
     y: "",
     op_code: "",
-    stack: Uint8Array.make([]),
     status: "",
   }
   if limit == -1 || count.contents < limit {
@@ -35,8 +32,6 @@ let debug_limit = (cpu: Cpu.cpu, limit: int) => {
     | Some(ins) => "0x" ++ ins.bin->hexdump
     | None => "Decode Error"
     }
-    let stack =
-      cpu.memory->Uint8Array.slice(~start=cpu.stack + cpu.stack_pointer + 1, ~end_=cpu.stack + 1)
     let status = Cpu.status_2_vector(cpu)->bindump
     let status = Js.String.repeat(8 - String.length(status), "0") ++ status
     i.pc = pchex
@@ -44,7 +39,6 @@ let debug_limit = (cpu: Cpu.cpu, limit: int) => {
     i.x = "0x" ++ cpu.register_x->hexdump
     i.y = "0x" ++ cpu.register_y->hexdump
     i.op_code = instruction
-    i.stack = stack
     i.status = status
     Js.log(i)
     count := count.contents + 1
