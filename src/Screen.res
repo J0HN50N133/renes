@@ -16,32 +16,6 @@ let color = byte => {
   | _ => (0, 0xFF, 0xFF)
   }
 }
-let raw_draw = %raw(`
-  function(canvas, scale, frame){
-    let ctx = canvas.getContext('2d')
-      let imageData = ctx.createImageData(32*scale, 32*scale)
-      for(let row = 0; row < 32; row++){
-        for(let col = 0; col < 32; col++){
-
-          let old_index = (row*32+col)*4
-          for(let y = 0; y < scale; y++){
-            let destRow = row*scale + y
-            for(let x = 0; x < scale; x++){
-              let destCol = col*scale + x
-              let index = (destRow*32*scale+destCol)*4
-              let pixel = frame[row*32+col]
-              let rgb = color(pixel)
-              imageData.data[index] = frame.data[old_index]
-              imageData.data[index+1] = frame.data[old_index+1]
-              imageData.data[index+2] = frame.data[old_index+2]
-              imageData.data[index+3] = 255
-            }
-          }
-        }
-      }
-    ctx.putImageData(imageData, 20, 20)
-  }
-`)
 let frame_read = (frame, idx) => {
   let data = frame->Webapi__Dom__Image.data
   (data->U8CA.unsafe_get(idx), data->U8CA.unsafe_get(idx + 1), data->U8CA.unsafe_get(idx + 2))
@@ -68,9 +42,28 @@ let read_screen_state = (cpu: Cpu.cpu, frame) => {
   }
   update.contents
 }
-let scale = 10.
+let scale = 10
 let draw = (canvas, frame, cpu: Cpu.cpu) => {
   if read_screen_state(cpu, frame) {
-    let _ = raw_draw(canvas, scale, frame)
+    let ctx = canvas->Canvas.CanvasElement.getContext2d
+    let scaledImg =
+      ctx->C2d.createImageDataCoords(
+        ~width=32. *. float_of_int(scale),
+        ~height=32. *. float_of_int(scale),
+      )
+    for row in 0 to 31 {
+      for col in 0 to 31 {
+        let srcIndex = (row * 32 + col) * 4
+        for y in 0 to scale - 1 {
+          let destRow = row * scale + y
+          for x in 0 to scale - 1 {
+            let destCol = col * scale + x
+            let destIndex = (destRow * 32 * scale + destCol) * 4
+            frame_set(scaledImg, destIndex, frame_read(frame, srcIndex))
+          }
+        }
+      }
+    }
+    ctx->C2d.putImageData(~imageData=scaledImg, ~dx=20., ~dy=20.)
   }
 }
