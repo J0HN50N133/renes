@@ -330,7 +330,7 @@ let main = () => {
     0xfb,
     0x60,
   ])
-  let cpu = Cpu.new()
+  let cpu = Cpu.new(Bus.new(Rom.test_rom()))
   let canvasEl = document->Document.getElementById("canvas")->unwrapUnsafely
   let frame =
     canvasEl->Canvas.CanvasElement.getContext2d->C2d.createImageDataCoords(~width=32., ~height=32.)

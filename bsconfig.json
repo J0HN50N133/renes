@@ -15,7 +15,7 @@
     "module": "es6-global",
     "in-source": false
   },
-  "suffix": ".bs.js",
+  "suffix": ".mjs",
   "bs-dependencies": [
     "rescript-webapi"
   ],

@@ -47,14 +47,14 @@ let vector_2_status = (cpu, vector) => {
   cpu.c = land(vector, 0b0000_0001) === 0 ? 0 : 1
 }
 
-let new = () => {
+let new = bus => {
   {
     register_a: 0,
     register_x: 0,
     register_y: 0,
     stack_pointer: 0,
     pc: 0,
-    bus: Bus.new(),
+    bus: bus,
     stack: stack_init_val,
     jumped: false,
     n: 0,
@@ -393,39 +393,13 @@ let store = (cpu, mode, value) => {
 let sta = (cpu, mode) => store(cpu, mode, cpu.register_a)
 let stx = (cpu, mode) => store(cpu, mode, cpu.register_x)
 let sty = (cpu, mode) => store(cpu, mode, cpu.register_y)
-let interpret = (cpu, program) => {
-  cpu.pc = 0
-  let break = ref(false)
-  while !break.contents {
-    let op = mem_read(cpu, cpu.pc)
-    cpu.pc = cpu.pc + 1
-    let instruction = Belt.HashMap.get(instruction_table, op)
-    switch instruction {
-    | None => raise(ErrorInstruction)
-    | Some(i) =>
-      switch i.code {
-      | BRK => break := true
-      | LDA =>
-        lda(cpu, i.mode)
-        cpu.pc = cpu.pc + i.bytes - 1
-      | TAX => tax(cpu)
-      | INX => inx(cpu)
-      | INY => iny(cpu)
-      | STA =>
-        sta(cpu, i.mode)
-        cpu.pc = cpu.pc + i.bytes - 1
-      | _ => ()
-      }
-    }
-  }
-}
 let load_to = (cpu, addr, program) => {
   cpu.pc = addr
   let len = Uint8Array.length(program)
   for i in 0 to len - 1 {
     cpu->mem_write(addr + i, Uint8Array.unsafe_get(program, i))
   }
-  mem_write_2bytes(cpu, 0xFFFC, addr)
+  // mem_write_2bytes(cpu, 0xFFFC, addr)
 }
 let load = (cpu, program) => {cpu->load_to(0x0600, program)}
 
@@ -581,5 +555,10 @@ let run = run_with_callback(_, [])
 let load_and_run = (cpu, program) => {
   load(cpu, program)
   reset(cpu)
+  cpu.pc = 0x0600
+  run(cpu)
+}
+let interpret = (cpu, program) => {
+  load_to(cpu, 0, program)
   run(cpu)
 }
