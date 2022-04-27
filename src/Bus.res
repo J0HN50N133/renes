@@ -35,11 +35,11 @@ let mem_read = (bus, addr) => {
       let mask_addr = land(addr, ram_addr_mask)
       bus.cpu_vram->U8A.unsafe_get(mask_addr)
     }
+  | _ if prg_rom <= addr && addr <= prg_rom_end => bus->read_prg_rom(addr)
   | _ if ppu_registers <= addr && addr <= ppu_registers_mirrors_end => {
       let mask_addr = land(addr, ppu_registers_mask)
       raise(Utils.Exn.TODO)
     }
-  | _ if prg_rom <= addr && addr <= prg_rom_end => bus->read_prg_rom(addr)
   | _ => {
       Js.log("Ignoring mem access at 0x" ++ Js.Int.toStringWithRadix(addr, ~radix=16))
       0
@@ -52,6 +52,11 @@ let mem_read_2bytes = (bus, addr) => {
   | _ if ram <= addr && addr <= ram_mirrors_end => {
       let lo = bus.cpu_vram->U8A.unsafe_get(mask_ram_addr(addr))
       let hi = bus.cpu_vram->U8A.unsafe_get(mask_ram_addr(addr + 1))
+      lor(lsl(hi, 8), lo)
+    }
+  | _ if prg_rom <= addr && addr <= prg_rom_end => {
+      let lo = bus->read_prg_rom(addr)
+      let hi = bus->read_prg_rom(addr + 1)
       lor(lsl(hi, 8), lo)
     }
   | _ if ppu_registers <= addr && addr <= ppu_registers_mirrors_end => {
