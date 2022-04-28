@@ -159,316 +159,318 @@ let wrapping_add_8 = wrapping_add(8)
 let wrapping_add_with_carry_8 = wrapping_add_with_carry(8)
 let wrapping_add_16 = wrapping_add(16)
 let wrapping_add_with_carry_16 = wrapping_add_with_carry(16)
-let get_operand_address = (cpu, mode) =>
-  switch mode {
-  | Immediate => cpu.pc
-  | Relative => {
-      let addr = mem_read(cpu, cpu.pc)
-      let addr = if addr < 0x80 {
-        cpu.pc + addr
-      } else {
-        cpu.pc + addr - 256
+%%private(
+  let get_operand_address = (cpu, mode) =>
+    switch mode {
+    | Immediate => cpu.pc
+    | Relative => {
+        let addr = mem_read(cpu, cpu.pc)
+        let addr = if addr < 0x80 {
+          cpu.pc + addr
+        } else {
+          cpu.pc + addr - 256
+        }
+        // -1, since the pc have been move 1 in get_instruction
+        addr + 1
       }
-      // -1, since the pc have been move 1 in get_instruction
-      addr + 1
-    }
-  | ZeroPage => mem_read(cpu, cpu.pc)
-  | Absolute => mem_read_2bytes(cpu, cpu.pc)
-  | ZeroPage_X => {
-      let pos = mem_read(cpu, cpu.pc)
-      let addr = wrapping_add_16(pos, cpu.register_x)
-      addr
-    }
-  | ZeroPage_Y => {
-      let pos = mem_read(cpu, cpu.pc)
-      let addr = wrapping_add_16(pos, cpu.register_y)
-      addr
-    }
-  | Absolute_X => {
-      let base = mem_read_2bytes(cpu, cpu.pc)
-      let addr = wrapping_add_16(base, cpu.register_x)
-      addr
-    }
-  | Absolute_Y => {
-      let base = mem_read_2bytes(cpu, cpu.pc)
-      let addr = wrapping_add_16(base, cpu.register_y)
-      addr
-    }
-  | Indirect_X => {
-      let base = mem_read(cpu, cpu.pc)
-      let ptr = wrapping_add_8(base, cpu.register_x)
-      let lo = mem_read(cpu, ptr)
-      let hi = mem_read(cpu, wrapping_add_8(ptr, 1))
-      lor(lsl(hi, 8), lo)
-    }
-  | Indirect_Y => {
-      let base = mem_read(cpu, cpu.pc)
-      let lo = mem_read(cpu, base)
-      let hi = mem_read(cpu, wrapping_add_8(base, 1))
-      let deref_base = lor(lsl(hi, 8), lo)
-      let deref = wrapping_add_16(deref_base, cpu.register_y)
-      deref
-    }
-  | Indirect => {
-      let mem_addr = mem_read_2bytes(cpu, cpu.pc)
-      if land(mem_addr, 0xFF) == 0xFF {
-        // paging
-        let lo = mem_read(cpu, mem_addr)
-        let hi = mem_read(cpu, land(mem_addr, 0xFF00))
+    | ZeroPage => mem_read(cpu, cpu.pc)
+    | Absolute => mem_read_2bytes(cpu, cpu.pc)
+    | ZeroPage_X => {
+        let pos = mem_read(cpu, cpu.pc)
+        let addr = wrapping_add_16(pos, cpu.register_x)
+        addr
+      }
+    | ZeroPage_Y => {
+        let pos = mem_read(cpu, cpu.pc)
+        let addr = wrapping_add_16(pos, cpu.register_y)
+        addr
+      }
+    | Absolute_X => {
+        let base = mem_read_2bytes(cpu, cpu.pc)
+        let addr = wrapping_add_16(base, cpu.register_x)
+        addr
+      }
+    | Absolute_Y => {
+        let base = mem_read_2bytes(cpu, cpu.pc)
+        let addr = wrapping_add_16(base, cpu.register_y)
+        addr
+      }
+    | Indirect_X => {
+        let base = mem_read(cpu, cpu.pc)
+        let ptr = wrapping_add_8(base, cpu.register_x)
+        let lo = mem_read(cpu, ptr)
+        let hi = mem_read(cpu, wrapping_add_8(ptr, 1))
         lor(lsl(hi, 8), lo)
-      } else {
-        mem_read_2bytes(cpu, mem_addr)
+      }
+    | Indirect_Y => {
+        let base = mem_read(cpu, cpu.pc)
+        let lo = mem_read(cpu, base)
+        let hi = mem_read(cpu, wrapping_add_8(base, 1))
+        let deref_base = lor(lsl(hi, 8), lo)
+        let deref = wrapping_add_16(deref_base, cpu.register_y)
+        deref
+      }
+    | Indirect => {
+        let mem_addr = mem_read_2bytes(cpu, cpu.pc)
+        if land(mem_addr, 0xFF) == 0xFF {
+          // paging
+          let lo = mem_read(cpu, mem_addr)
+          let hi = mem_read(cpu, land(mem_addr, 0xFF00))
+          lor(lsl(hi, 8), lo)
+        } else {
+          mem_read_2bytes(cpu, mem_addr)
+        }
+      }
+    | NoneAddressing => raise(UnSupportedAddressingMode)
+    }
+
+  let load_to_register = (cpu, value) => {
+    update_zero_and_negative_flags(cpu, value)
+    value
+  }
+  let add_to_register_a = (cpu, data) => {
+    let sum = cpu.register_a + data + cpu.c
+    cpu.c = sum > 0xff ? 1 : 0
+    let result = land(sum, 0xff)
+    cpu.v = if land(land(lxor(data, result), lxor(result, cpu.register_a)), 0x80) === 1 {
+      1
+    } else {
+      0
+    }
+    cpu.register_a = load_to_register(cpu, result)
+  }
+  let adc = (cpu, mode) => {
+    let addr = get_operand_address(cpu, mode)
+    let m = mem_read(cpu, addr)
+    add_to_register_a(cpu, m)
+  }
+  let logic_and_or_op = (cpu, mode, op) => {
+    let addr = get_operand_address(cpu, mode)
+    let m = mem_read(cpu, addr)
+    cpu.register_a = op(cpu.register_a, m)
+    update_zero_and_negative_flags(cpu, cpu.register_a)
+  }
+  let and_ = (cpu, mode) => {logic_and_or_op(cpu, mode, land)}
+  let ora = (cpu, mode) => {logic_and_or_op(cpu, mode, lor)}
+  let get_operand_value_in_mem_or_a = (cpu, mode) => {
+    switch mode {
+    | NoneAddressing => cpu.register_a
+    | _ => {
+        let addr = get_operand_address(cpu, mode)
+        mem_read(cpu, addr)
       }
     }
-  | NoneAddressing => raise(UnSupportedAddressingMode)
   }
-
-let load_to_register = (cpu, value) => {
-  update_zero_and_negative_flags(cpu, value)
-  value
-}
-let add_to_register_a = (cpu, data) => {
-  let sum = cpu.register_a + data + cpu.c
-  cpu.c = sum > 0xff ? 1 : 0
-  let result = land(sum, 0xff)
-  cpu.v = if land(land(lxor(data, result), lxor(result, cpu.register_a)), 0x80) === 1 {
-    1
-  } else {
-    0
+  let write_operand_to_mem_or_a = (cpu, mode, value) => {
+    let wrap_value = land(value, 0xff)
+    switch mode {
+    | NoneAddressing => cpu.register_a = wrap_value
+    | _ => mem_write(cpu, get_operand_address(cpu, mode), wrap_value)
+    }
+    update_zero_and_negative_flags(cpu, value)
   }
-  cpu.register_a = load_to_register(cpu, result)
-}
-let adc = (cpu, mode) => {
-  let addr = get_operand_address(cpu, mode)
-  let m = mem_read(cpu, addr)
-  add_to_register_a(cpu, m)
-}
-let logic_and_or_op = (cpu, mode, op) => {
-  let addr = get_operand_address(cpu, mode)
-  let m = mem_read(cpu, addr)
-  cpu.register_a = op(cpu.register_a, m)
-  update_zero_and_negative_flags(cpu, cpu.register_a)
-}
-let and_ = (cpu, mode) => {logic_and_or_op(cpu, mode, land)}
-let ora = (cpu, mode) => {logic_and_or_op(cpu, mode, lor)}
-let get_operand_value_in_mem_or_a = (cpu, mode) => {
-  switch mode {
-  | NoneAddressing => cpu.register_a
-  | _ => {
-      let addr = get_operand_address(cpu, mode)
-      mem_read(cpu, addr)
+  let asl = (cpu, mode) => {
+    let val = get_operand_value_in_mem_or_a(cpu, mode)
+    cpu.c = land(lsr(val, 7), 1)
+    write_operand_to_mem_or_a(cpu, mode, lsl(val, 1))
+  }
+  let lsr_ = (cpu, mode) => {
+    let val = get_operand_value_in_mem_or_a(cpu, mode)
+    cpu.c = land(val, 1)
+    write_operand_to_mem_or_a(cpu, mode, lsr(val, 1))
+  }
+  // return whether the cpu have jumped
+  let jmp_if_1 = (value, cpu, mode) => {
+    if value === 1 {
+      cpu.pc = get_operand_address(cpu, mode)
+      cpu.jumped = true
     }
   }
-}
-let write_operand_to_mem_or_a = (cpu, mode, value) => {
-  let wrap_value = land(value, 0xff)
-  switch mode {
-  | NoneAddressing => cpu.register_a = wrap_value
-  | _ => mem_write(cpu, get_operand_address(cpu, mode), wrap_value)
+  let jmp_if_0 = (value, cpu, mode) => {
+    if value === 0 {
+      cpu.pc = get_operand_address(cpu, mode)
+      cpu.jumped = true
+    }
   }
-  update_zero_and_negative_flags(cpu, value)
-}
-let asl = (cpu, mode) => {
-  let val = get_operand_value_in_mem_or_a(cpu, mode)
-  cpu.c = land(lsr(val, 7), 1)
-  write_operand_to_mem_or_a(cpu, mode, lsl(val, 1))
-}
-let lsr_ = (cpu, mode) => {
-  let val = get_operand_value_in_mem_or_a(cpu, mode)
-  cpu.c = land(val, 1)
-  write_operand_to_mem_or_a(cpu, mode, lsr(val, 1))
-}
-// return whether the cpu have jumped
-let jmp_if_1 = (value, cpu, mode) => {
-  if value === 1 {
+
+  let bcc = (cpu, mode) => jmp_if_0(cpu.c, cpu, mode)
+  let bcs = (cpu, mode) => jmp_if_1(cpu.c, cpu, mode)
+  let beq = (cpu, mode) => jmp_if_1(cpu.z, cpu, mode)
+  let bmi = (cpu, mode) => jmp_if_1(cpu.n, cpu, mode)
+  let bne = (cpu, mode) => jmp_if_0(cpu.z, cpu, mode)
+  let bpl = (cpu, mode) => jmp_if_0(cpu.n, cpu, mode)
+  let bvc = (cpu, mode) => jmp_if_0(cpu.v, cpu, mode)
+  let bvs = (cpu, mode) => jmp_if_1(cpu.v, cpu, mode)
+  let clc = cpu => cpu.c = 0
+  let cld = cpu => cpu.d = 0
+  let cli = cpu => cpu.i = 0
+  let clv = cpu => cpu.v = 0
+  let compare = (cpu, mode, compare_with) => {
+    let addr = get_operand_address(cpu, mode)
+    let m = mem_read(cpu, addr)
+    cpu.c = if m <= compare_with {
+      1
+    } else {
+      0
+    }
+    update_zero_and_negative_flags(cpu, compare_with - m)
+  }
+  let cmp = (cpu, mode) => compare(cpu, mode, cpu.register_a)
+  let cpx = (cpu, mode) => compare(cpu, mode, cpu.register_x)
+  let cpy = (cpu, mode) => compare(cpu, mode, cpu.register_y)
+  let decrease = (cpu, value) => {
+    let temp = land(value - 1, 0xff)
+    update_zero_and_negative_flags(cpu, temp)
+    temp
+  }
+  let dec = (cpu, mode) => {
+    let addr = get_operand_address(cpu, mode)
+    let m = mem_read(cpu, addr)
+    mem_write(cpu, addr, decrease(cpu, m))
+  }
+  let dex = cpu => {
+    cpu.register_x = decrease(cpu, cpu.register_x)
+  }
+  let dey = cpu => {
+    cpu.register_y = decrease(cpu, cpu.register_y)
+  }
+  let eor = (cpu, mode) => {
+    let addr = get_operand_address(cpu, mode)
+    let m = mem_read(cpu, addr)
+    cpu.register_a = lxor(m, cpu.register_a)
+    update_zero_and_negative_flags(cpu, cpu.register_a)
+  }
+  let increase = (cpu, value) => {
+    let temp = land(value + 1, 0xff)
+    update_zero_and_negative_flags(cpu, temp)
+    temp
+  }
+  let inc = (cpu, mode) => {
+    let addr = get_operand_address(cpu, mode)
+    let m = mem_read(cpu, addr)
+    mem_write(cpu, addr, increase(cpu, m))
+  }
+  let inx = cpu => cpu.register_x = increase(cpu, cpu.register_x)
+  let iny = cpu => cpu.register_y = increase(cpu, cpu.register_y)
+  let jmp = (cpu, mode) => {
     cpu.pc = get_operand_address(cpu, mode)
     cpu.jumped = true
   }
-}
-let jmp_if_0 = (value, cpu, mode) => {
-  if value === 0 {
+  let jsr = (cpu, mode) => {
+    cpu->stack_push_2bytes(cpu.pc + 1)
     cpu.pc = get_operand_address(cpu, mode)
     cpu.jumped = true
   }
-}
+  let bit = (cpu, mode) => {
+    let addr = get_operand_address(cpu, mode)
+    let m = mem_read(cpu, addr)
+    let temp = land(m, cpu.register_a)
+    cpu.z = temp === 0 ? 1 : 0
+    cpu.n = land(lsl(m, 7), 1)
+    cpu.v = land(lsl(m, 6), 1)
+  }
+  let lda = (cpu, mode) => {
+    let addr = get_operand_address(cpu, mode)
+    cpu.register_a = load_to_register(cpu, mem_read(cpu, addr))
+  }
+  let ldx = (cpu, mode) => {
+    let addr = get_operand_address(cpu, mode)
+    cpu.register_x = load_to_register(cpu, mem_read(cpu, addr))
+  }
+  let ldy = (cpu, mode) => {
+    let addr = get_operand_address(cpu, mode)
+    cpu.register_y = load_to_register(cpu, mem_read(cpu, addr))
+  }
+  let tax = cpu => {cpu.register_x = load_to_register(cpu, cpu.register_a)}
+  let tay = cpu => {cpu.register_y = load_to_register(cpu, cpu.register_a)}
+  let tya = cpu => {cpu.register_a = load_to_register(cpu, cpu.register_y)}
+  let txa = cpu => {cpu.register_a = load_to_register(cpu, cpu.register_x)}
+  let txs = cpu => {cpu.stack_pointer = load_to_register(cpu, cpu.register_x)}
+  let tsx = cpu => {cpu.register_x = load_to_register(cpu, cpu.stack_pointer)}
 
-let bcc = (cpu, mode) => jmp_if_0(cpu.c, cpu, mode)
-let bcs = (cpu, mode) => jmp_if_1(cpu.c, cpu, mode)
-let beq = (cpu, mode) => jmp_if_1(cpu.z, cpu, mode)
-let bmi = (cpu, mode) => jmp_if_1(cpu.n, cpu, mode)
-let bne = (cpu, mode) => jmp_if_0(cpu.z, cpu, mode)
-let bpl = (cpu, mode) => jmp_if_0(cpu.n, cpu, mode)
-let bvc = (cpu, mode) => jmp_if_0(cpu.v, cpu, mode)
-let bvs = (cpu, mode) => jmp_if_1(cpu.v, cpu, mode)
-let clc = cpu => cpu.c = 0
-let cld = cpu => cpu.d = 0
-let cli = cpu => cpu.i = 0
-let clv = cpu => cpu.v = 0
-let compare = (cpu, mode, compare_with) => {
-  let addr = get_operand_address(cpu, mode)
-  let m = mem_read(cpu, addr)
-  cpu.c = if m <= compare_with {
-    1
-  } else {
-    0
+  let store = (cpu, mode, value) => {
+    let addr = get_operand_address(cpu, mode)
+    mem_write(cpu, addr, value)
   }
-  update_zero_and_negative_flags(cpu, compare_with - m)
-}
-let cmp = (cpu, mode) => compare(cpu, mode, cpu.register_a)
-let cpx = (cpu, mode) => compare(cpu, mode, cpu.register_x)
-let cpy = (cpu, mode) => compare(cpu, mode, cpu.register_y)
-let decrease = (cpu, value) => {
-  let temp = land(value - 1, 0xff)
-  update_zero_and_negative_flags(cpu, temp)
-  temp
-}
-let dec = (cpu, mode) => {
-  let addr = get_operand_address(cpu, mode)
-  let m = mem_read(cpu, addr)
-  mem_write(cpu, addr, decrease(cpu, m))
-}
-let dex = cpu => {
-  cpu.register_x = decrease(cpu, cpu.register_x)
-}
-let dey = cpu => {
-  cpu.register_y = decrease(cpu, cpu.register_y)
-}
-let eor = (cpu, mode) => {
-  let addr = get_operand_address(cpu, mode)
-  let m = mem_read(cpu, addr)
-  cpu.register_a = lxor(m, cpu.register_a)
-  update_zero_and_negative_flags(cpu, cpu.register_a)
-}
-let increase = (cpu, value) => {
-  let temp = land(value + 1, 0xff)
-  update_zero_and_negative_flags(cpu, temp)
-  temp
-}
-let inc = (cpu, mode) => {
-  let addr = get_operand_address(cpu, mode)
-  let m = mem_read(cpu, addr)
-  mem_write(cpu, addr, increase(cpu, m))
-}
-let inx = cpu => cpu.register_x = increase(cpu, cpu.register_x)
-let iny = cpu => cpu.register_y = increase(cpu, cpu.register_y)
-let jmp = (cpu, mode) => {
-  cpu.pc = get_operand_address(cpu, mode)
-  cpu.jumped = true
-}
-let jsr = (cpu, mode) => {
-  cpu->stack_push_2bytes(cpu.pc + 1)
-  cpu.pc = get_operand_address(cpu, mode)
-  cpu.jumped = true
-}
-let bit = (cpu, mode) => {
-  let addr = get_operand_address(cpu, mode)
-  let m = mem_read(cpu, addr)
-  let temp = land(m, cpu.register_a)
-  cpu.z = temp === 0 ? 1 : 0
-  cpu.n = land(lsl(m, 7), 1)
-  cpu.v = land(lsl(m, 6), 1)
-}
-let lda = (cpu, mode) => {
-  let addr = get_operand_address(cpu, mode)
-  cpu.register_a = load_to_register(cpu, mem_read(cpu, addr))
-}
-let ldx = (cpu, mode) => {
-  let addr = get_operand_address(cpu, mode)
-  cpu.register_x = load_to_register(cpu, mem_read(cpu, addr))
-}
-let ldy = (cpu, mode) => {
-  let addr = get_operand_address(cpu, mode)
-  cpu.register_y = load_to_register(cpu, mem_read(cpu, addr))
-}
-let tax = cpu => {cpu.register_x = load_to_register(cpu, cpu.register_a)}
-let tay = cpu => {cpu.register_y = load_to_register(cpu, cpu.register_a)}
-let tya = cpu => {cpu.register_a = load_to_register(cpu, cpu.register_y)}
-let txa = cpu => {cpu.register_a = load_to_register(cpu, cpu.register_x)}
-let txs = cpu => {cpu.stack_pointer = load_to_register(cpu, cpu.register_x)}
-let tsx = cpu => {cpu.register_x = load_to_register(cpu, cpu.stack_pointer)}
+  let sta = (cpu, mode) => store(cpu, mode, cpu.register_a)
+  let stx = (cpu, mode) => store(cpu, mode, cpu.register_x)
+  let sty = (cpu, mode) => store(cpu, mode, cpu.register_y)
+  let load_to = (cpu, addr, program) => {
+    cpu.pc = addr
+    let len = Uint8Array.length(program)
+    for i in 0 to len - 1 {
+      cpu->mem_write(addr + i, Uint8Array.unsafe_get(program, i))
+    }
+    // mem_write_2bytes(cpu, 0xFFFC, addr)
+  }
+  let load = (cpu, program) => {cpu->load_to(0x0600, program)}
 
-let store = (cpu, mode, value) => {
-  let addr = get_operand_address(cpu, mode)
-  mem_write(cpu, addr, value)
-}
-let sta = (cpu, mode) => store(cpu, mode, cpu.register_a)
-let stx = (cpu, mode) => store(cpu, mode, cpu.register_x)
-let sty = (cpu, mode) => store(cpu, mode, cpu.register_y)
-let load_to = (cpu, addr, program) => {
-  cpu.pc = addr
-  let len = Uint8Array.length(program)
-  for i in 0 to len - 1 {
-    cpu->mem_write(addr + i, Uint8Array.unsafe_get(program, i))
+  let pc_safe = cpu => cpu.pc <= Bus.ram_mirrors_end
+  let php = cpu => {
+    let vector = status_2_vector(cpu)
+    cpu.g = 1
+    cpu.b = 1
+    stack_push(cpu, vector)
   }
-  // mem_write_2bytes(cpu, 0xFFFC, addr)
-}
-let load = (cpu, program) => {cpu->load_to(0x0600, program)}
-
-let pc_safe = cpu => cpu.pc <= Bus.ram_mirrors_end
-let php = cpu => {
-  let vector = status_2_vector(cpu)
-  cpu.g = 1
-  cpu.b = 1
-  stack_push(cpu, vector)
-}
-let pla = cpu => {
-  let data = stack_pop(cpu)
-  cpu.register_a = load_to_register(cpu, data)
-}
-let plp = cpu => {
-  let g = cpu.g
-  let vector = stack_pop(cpu)
-  vector_2_status(cpu, vector)
-  cpu.b = 0
-  cpu.g = g
-}
-// A - M - ~C == A - M + C - 1
-let sbc = (cpu, mode) => {
-  let addr = get_operand_address(cpu, mode)
-  let m = mem_read(cpu, addr)
-  add_to_register_a(cpu, -m - 1)
-}
-let rol = (cpu, mode) => {
-  let m = ref(get_operand_value_in_mem_or_a(cpu, mode))
-  let old_c = cpu.c
-  cpu.c = if lsr(m.contents, 7) === 0 {
-    0
-  } else {
-    1
+  let pla = cpu => {
+    let data = stack_pop(cpu)
+    cpu.register_a = load_to_register(cpu, data)
   }
-  m := lsl(m.contents, 1)
-  m := lor(m.contents, old_c)
-  write_operand_to_mem_or_a(cpu, mode, m.contents)
-}
-let ror = (cpu, mode) => {
-  let m = ref(get_operand_value_in_mem_or_a(cpu, mode))
-  let old_c = cpu.c
-  cpu.c = if land(m.contents, 1) === 0 {
-    0
-  } else {
-    1
+  let plp = cpu => {
+    let g = cpu.g
+    let vector = stack_pop(cpu)
+    vector_2_status(cpu, vector)
+    cpu.b = 0
+    cpu.g = g
   }
-  m := lsr(m.contents, 1)
-  m := lor(m.contents, lsl(old_c, 7))
-  write_operand_to_mem_or_a(cpu, mode, m.contents)
-}
-let rti = cpu => {
-  let vector = stack_pop(cpu)
-  vector_2_status(cpu, vector)
-  cpu.b = 0
-  cpu.g = 1
-  cpu.pc = stack_pop_2bytes(cpu)
-  cpu.jumped = true
-}
-let rts = cpu => {
-  cpu.pc = stack_pop_2bytes(cpu) + 1
-  cpu.jumped = true
-}
-let brk = cpu => {
-  cpu.i = 1
-  cpu->stack_push(cpu.pc + 1)
-  cpu->stack_push(cpu->status_2_vector)
-}
+  // A - M - ~C == A - M + C - 1
+  let sbc = (cpu, mode) => {
+    let addr = get_operand_address(cpu, mode)
+    let m = mem_read(cpu, addr)
+    add_to_register_a(cpu, -m - 1)
+  }
+  let rol = (cpu, mode) => {
+    let m = ref(get_operand_value_in_mem_or_a(cpu, mode))
+    let old_c = cpu.c
+    cpu.c = if lsr(m.contents, 7) === 0 {
+      0
+    } else {
+      1
+    }
+    m := lsl(m.contents, 1)
+    m := lor(m.contents, old_c)
+    write_operand_to_mem_or_a(cpu, mode, m.contents)
+  }
+  let ror = (cpu, mode) => {
+    let m = ref(get_operand_value_in_mem_or_a(cpu, mode))
+    let old_c = cpu.c
+    cpu.c = if land(m.contents, 1) === 0 {
+      0
+    } else {
+      1
+    }
+    m := lsr(m.contents, 1)
+    m := lor(m.contents, lsl(old_c, 7))
+    write_operand_to_mem_or_a(cpu, mode, m.contents)
+  }
+  let rti = cpu => {
+    let vector = stack_pop(cpu)
+    vector_2_status(cpu, vector)
+    cpu.b = 0
+    cpu.g = 1
+    cpu.pc = stack_pop_2bytes(cpu)
+    cpu.jumped = true
+  }
+  let rts = cpu => {
+    cpu.pc = stack_pop_2bytes(cpu) + 1
+    cpu.jumped = true
+  }
+  let brk = cpu => {
+    cpu.i = 1
+    cpu->stack_push(cpu.pc + 1)
+    cpu->stack_push(cpu->status_2_vector)
+  }
+)
 let step = (cpu, callback_list, break) => {
   Array.iter(f => f(cpu), callback_list)
   let op = mem_read(cpu, cpu.pc)
