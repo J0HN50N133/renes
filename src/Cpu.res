@@ -84,17 +84,18 @@ let mem_write_2bytes = (cpu, addr, data) => {
   open Bus
   cpu.bus->mem_write_2bytes(addr, data)
 }
-
-let stack_push = (cpu, data) => {
-  mem_write(cpu, cpu.stack + cpu.stack_pointer, data)
-  cpu.stack_pointer = cpu.stack_pointer - 1
-}
-let stack_push_2bytes = (cpu, data) => {
-  let hi = lsr(data, 8)
-  let lo = land(data, 0xff)
-  stack_push(cpu, hi)
-  stack_push(cpu, lo)
-}
+%%private(
+  let stack_push = (cpu, data) => {
+    mem_write(cpu, cpu.stack + cpu.stack_pointer, data)
+    cpu.stack_pointer = cpu.stack_pointer - 1
+  }
+  let stack_push_2bytes = (cpu, data) => {
+    let hi = lsr(data, 8)
+    let lo = land(data, 0xff)
+    stack_push(cpu, hi)
+    stack_push(cpu, lo)
+  }
+)
 let stack_pop = cpu => {
   cpu.stack_pointer = cpu.stack_pointer + 1
   mem_read(cpu, cpu.stack + cpu.stack_pointer)
