@@ -6,14 +6,14 @@ let hexrep = i => i->Js.Int.toStringWithRadix(~radix=16)
 let bindump = i => i->Js.Int.toStringWithRadix(~radix=2)
 type l_or_r = L | R
 let fill_with = (~l_or_r=R, s, w, c) => {
-  let lack = w - s->Js.String2.length
+  let lack = Js.Math.max_int(w - s->Js.String2.length, 0)
   switch l_or_r {
   | R => s ++ Js.String2.repeat(c, lack)
   | L => Js.String2.repeat(c, lack) ++ s
   }
 }
 let fill0 = (s, w) => {
-  let lack = w - s->Js.String2.length
+  let lack = Js.Math.max_int(w - s->Js.String2.length, 0)
   Js.String2.repeat("0", lack) ++ s
 }
 
@@ -81,20 +81,19 @@ let trace = (cpu: Cpu.cpu) => {
   | 2 => {
       let addr = cpu->Cpu.mem_read(begin + 1)
       let _ = hexdump.contents->Js.Array2.push(addr)
-      let f = addr => addr->hexrep->fill0(2)
       switch ops.mode {
-      | Immediate => `#$${f(addr)}`
-      | ZeroPage => `$${f(addr)} = ${f(stored_value)}`
-      | ZeroPage_X => `$${f(addr)},X @ ${f(mem_addr)} = ${f(stored_value)}`
-      | ZeroPage_Y => `$${f(addr)},Y @ ${f(mem_addr)} = ${f(stored_value)}`
+      | Immediate => `#$${f2(addr)}`
+      | ZeroPage => `$${f2(addr)} = ${f2(stored_value)}`
+      | ZeroPage_X => `$${f2(addr)},X @ ${f2(mem_addr)} = ${f2(stored_value)}`
+      | ZeroPage_Y => `$${f2(addr)},Y @ ${f2(mem_addr)} = ${f2(stored_value)}`
       | Indirect_X =>
-        `(${f(addr)},X) @ ${(addr + cpu.register_x)->mod(0x100)->f} = ${mem_addr
+        `($${f2(addr)},X) @ ${(addr + cpu.register_x)->mod(0x100)->f2} = ${mem_addr
           ->hexrep
-          ->fill0(4)} = ${f(stored_value)}`
+          ->fill0(4)} = ${f2(stored_value)}`
       | Indirect_Y =>
-        `(${f(addr)},Y) @ ${(addr - cpu.register_y)->mod(0x100)->f} = ${mem_addr
-          ->hexrep
-          ->fill0(4)} = ${f(stored_value)}`
+        `($${f2(addr)}),Y = ${(mem_addr - cpu.register_y)->f4} @ ${mem_addr->f4} = ${f2(
+            stored_value,
+          )}`
       | Relative => `$${f4(mod(begin + addr + 2, 0x10000))}`
       | _ => failwith("Unexpected")
       }
@@ -122,8 +121,8 @@ let trace = (cpu: Cpu.cpu) => {
         | JMP | JSR => `$${f4(addr)}`
         | _ => `$${f4(addr)} = ${f2(stored_value)}`
         }
-      | Absolute_X => `$${f4(addr)},X @ ${f4(mem_addr)}} = ${f2(stored_value)}`
-      | Absolute_Y => `$${f4(addr)},Y @ ${f4(mem_addr)}} = ${f2(stored_value)}`
+      | Absolute_X => `$${f4(addr)},X @ ${f4(mem_addr)} = ${f2(stored_value)}`
+      | Absolute_Y => `$${f4(addr)},Y @ ${f4(mem_addr)} = ${f2(stored_value)}`
       | _ => failwith("unexpected addressing mode")
       }
     }
