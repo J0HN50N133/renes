@@ -162,9 +162,9 @@ let get_absolute_addr = (cpu, mode, addr) => {
   | Relative => {
       let addr = mem_read(cpu, addr)
       let addr = if addr < 0x80 {
-        addr + addr
+        cpu.pc + addr
       } else {
-        addr + addr - 256
+        cpu.pc + addr - 256
       }
       // -1, since the pc have been move 1 in get_instruction
       addr + 1
