@@ -393,7 +393,7 @@ let get_operand_address = (cpu, mode) =>
   let tay = cpu => {cpu.register_y = load_to_register(cpu, cpu.register_a)}
   let tya = cpu => {cpu.register_a = load_to_register(cpu, cpu.register_y)}
   let txa = cpu => {cpu.register_a = load_to_register(cpu, cpu.register_x)}
-  let txs = cpu => {cpu.stack_pointer = load_to_register(cpu, cpu.register_x)}
+  let txs = cpu => {cpu.stack_pointer = cpu.register_x}
   let tsx = cpu => {cpu.register_x = load_to_register(cpu, cpu.stack_pointer)}
 
   let store = (cpu, mode, value) => {
