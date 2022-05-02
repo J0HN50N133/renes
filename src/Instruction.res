@@ -220,7 +220,7 @@ let instruction_table = Belt.HashMap.fromArray(
     new(0x48, PHA, 3, NoneAddressing),
     new(0x08, PHP, 3, NoneAddressing),
     new(0x68, PLA, 4, NoneAddressing),
-    new(0x28, ROL, 2, NoneAddressing),
+    new(0x28, PLP, 2, NoneAddressing),
     new(0x2A, ROL, 5, ZeroPage),
     new(0x26, ROL, 6, ZeroPage_X),
     new(0x36, ROL, 6, Absolute),
