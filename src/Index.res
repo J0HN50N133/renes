@@ -1,5 +1,5 @@
-open Webapi.Dom
 open Js.TypedArray2
+open Webapi.Dom
 module Evt = Webapi.Dom.Event
 module Canvas = Webapi.Canvas
 module CElem = Webapi.Canvas.CanvasElement
@@ -38,6 +38,9 @@ let runRom = rom => {
   let frame =
     canvasEl->Canvas.CanvasElement.getContext2d->C2d.createImageDataCoords(~width=32., ~height=32.)
   Cpu.reset(cpu)
+  cpu.pc = 0xC000
+  cpu->Cpu.run_with_callback([cpu => Js.log(Debug.trace(cpu)), Debug.debug])
+  /*
   setInterval(() => {
     Cpu.step(
       cpu,
@@ -49,6 +52,8 @@ let runRom = rom => {
       break,
     )
   }, 1)
+*/
+  1
 }
 let reset = id => {
   debugBox->enableBtn
@@ -119,5 +124,5 @@ let onRomUploaded = changeEvent => {
 
 let _ = {
   let romEl = document->Document.getElementById("rom")->unwrapUnsafely
-  romEl->Element.addEventListener("change", onRomUploaded)
+  let _ = romEl->Element.addEventListener("change", onRomUploaded)
 }

@@ -139,8 +139,6 @@ let reset = cpu => {
   vector_2_status(cpu, 0)
   cpu.g = 1
   cpu.i = 1
-  cpu.b = 1
-
   cpu.pc = mem_read_2bytes(cpu, 0xFFFC)
   stack_reset(cpu)
 }
@@ -159,71 +157,76 @@ let wrapping_add_8 = wrapping_add(8)
 let wrapping_add_with_carry_8 = wrapping_add_with_carry(8)
 let wrapping_add_16 = wrapping_add(16)
 let wrapping_add_with_carry_16 = wrapping_add_with_carry(16)
-%%private(
-  let get_operand_address = (cpu, mode) =>
-    switch mode {
-    | Immediate => cpu.pc
-    | Relative => {
-        let addr = mem_read(cpu, cpu.pc)
-        let addr = if addr < 0x80 {
-          cpu.pc + addr
-        } else {
-          cpu.pc + addr - 256
-        }
-        // -1, since the pc have been move 1 in get_instruction
-        addr + 1
+let get_absolute_addr = (cpu, mode, addr) => {
+  switch mode {
+  | Relative => {
+      let addr = mem_read(cpu, addr)
+      let addr = if addr < 0x80 {
+        addr + addr
+      } else {
+        addr + addr - 256
       }
-    | ZeroPage => mem_read(cpu, cpu.pc)
-    | Absolute => mem_read_2bytes(cpu, cpu.pc)
-    | ZeroPage_X => {
-        let pos = mem_read(cpu, cpu.pc)
-        let addr = wrapping_add_16(pos, cpu.register_x)
-        addr
-      }
-    | ZeroPage_Y => {
-        let pos = mem_read(cpu, cpu.pc)
-        let addr = wrapping_add_16(pos, cpu.register_y)
-        addr
-      }
-    | Absolute_X => {
-        let base = mem_read_2bytes(cpu, cpu.pc)
-        let addr = wrapping_add_16(base, cpu.register_x)
-        addr
-      }
-    | Absolute_Y => {
-        let base = mem_read_2bytes(cpu, cpu.pc)
-        let addr = wrapping_add_16(base, cpu.register_y)
-        addr
-      }
-    | Indirect_X => {
-        let base = mem_read(cpu, cpu.pc)
-        let ptr = wrapping_add_8(base, cpu.register_x)
-        let lo = mem_read(cpu, ptr)
-        let hi = mem_read(cpu, wrapping_add_8(ptr, 1))
-        lor(lsl(hi, 8), lo)
-      }
-    | Indirect_Y => {
-        let base = mem_read(cpu, cpu.pc)
-        let lo = mem_read(cpu, base)
-        let hi = mem_read(cpu, wrapping_add_8(base, 1))
-        let deref_base = lor(lsl(hi, 8), lo)
-        let deref = wrapping_add_16(deref_base, cpu.register_y)
-        deref
-      }
-    | Indirect => {
-        let mem_addr = mem_read_2bytes(cpu, cpu.pc)
-        if land(mem_addr, 0xFF) == 0xFF {
-          // paging
-          let lo = mem_read(cpu, mem_addr)
-          let hi = mem_read(cpu, land(mem_addr, 0xFF00))
-          lor(lsl(hi, 8), lo)
-        } else {
-          mem_read_2bytes(cpu, mem_addr)
-        }
-      }
-    | NoneAddressing => raise(UnSupportedAddressingMode)
+      // -1, since the pc have been move 1 in get_instruction
+      addr + 1
     }
+  | ZeroPage => mem_read(cpu, addr)
+  | Absolute => mem_read_2bytes(cpu, addr)
+  | ZeroPage_X => {
+      let pos = mem_read(cpu, addr)
+      let addr = wrapping_add_16(pos, cpu.register_x)
+      addr
+    }
+  | ZeroPage_Y => {
+      let pos = mem_read(cpu, addr)
+      let addr = wrapping_add_16(pos, cpu.register_y)
+      addr
+    }
+  | Absolute_X => {
+      let base = mem_read_2bytes(cpu, addr)
+      let addr = wrapping_add_16(base, cpu.register_x)
+      addr
+    }
+  | Absolute_Y => {
+      let base = mem_read_2bytes(cpu, addr)
+      let addr = wrapping_add_16(base, cpu.register_y)
+      addr
+    }
+  | Indirect_X => {
+      let base = mem_read(cpu, addr)
+      let ptr = wrapping_add_8(base, cpu.register_x)
+      let lo = mem_read(cpu, ptr)
+      let hi = mem_read(cpu, wrapping_add_8(ptr, 1))
+      lor(lsl(hi, 8), lo)
+    }
+  | Indirect_Y => {
+      let base = mem_read(cpu, addr)
+      let lo = mem_read(cpu, base)
+      let hi = mem_read(cpu, wrapping_add_8(base, 1))
+      let deref_base = lor(lsl(hi, 8), lo)
+      let deref = wrapping_add_16(deref_base, cpu.register_y)
+      deref
+    }
+  | Indirect => {
+      let mem_addr = mem_read_2bytes(cpu, addr)
+      if land(mem_addr, 0xFF) == 0xFF {
+        // paging
+        let lo = mem_read(cpu, mem_addr)
+        let hi = mem_read(cpu, land(mem_addr, 0xFF00))
+        lor(lsl(hi, 8), lo)
+      } else {
+        mem_read_2bytes(cpu, mem_addr)
+      }
+    }
+  | _ => raise(UnSupportedAddressingMode)
+  }
+}
+let get_operand_address = (cpu, mode) =>
+  switch mode {
+  | Immediate => cpu.pc
+  | _ => cpu->get_absolute_addr(mode, cpu.pc)
+  }
 
+%%private(
   let load_to_register = (cpu, value) => {
     update_zero_and_negative_flags(cpu, value)
     value
@@ -405,7 +408,8 @@ let wrapping_add_with_carry_16 = wrapping_add_with_carry(16)
   }
   let load = (cpu, program) => {cpu->load_to(0x0600, program)}
 
-  let pc_safe = cpu => cpu.pc <= Bus.ram_mirrors_end
+  let pc_safe = _ => true
+  // cpu => cpu.pc <= Bus.ram_mirrors_end
   let php = cpu => {
     let vector = status_2_vector(cpu)
     cpu.g = 1
@@ -542,7 +546,7 @@ let step = (cpu, callback_list, break) => {
     | RTS => rts(cpu)
     }
     switch cpu.jumped {
-    | false => cpu.pc = cpu.pc + i.bytes - 1
+    | false => cpu.pc = cpu.pc + i.len - 1
     | _ => ()
     }
   }

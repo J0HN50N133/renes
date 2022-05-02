@@ -74,12 +74,12 @@ type addressing_mode =
 type instruction = {
   bin: int,
   code: opcode,
-  bytes: int,
+  len: int,
   cycles: int,
   mode: addressing_mode,
 }
 let new = (bin, code, cycles, mode) => {
-  let bytes = switch mode {
+  let len = switch mode {
   | NoneAddressing => 1
   | Immediate
   | Relative
@@ -95,7 +95,7 @@ let new = (bin, code, cycles, mode) => {
     {
       bin: bin,
       code: code,
-      bytes: bytes,
+      len: len,
       cycles: cycles,
       mode: mode,
     },
@@ -263,3 +263,63 @@ let instruction_table = Belt.HashMap.fromArray(
     new(0x98, TYA, 2, NoneAddressing),
   ],
 )
+
+let string_of_opcode = op =>
+  switch op {
+  | ADC => "ADC"
+  | AND => "AND"
+  | ASL => "ASL"
+  | BCC => "BCC"
+  | BCS => "BCS"
+  | BEQ => "BEQ"
+  | BIT => "BIT"
+  | BMI => "BMI"
+  | BNE => "BNE"
+  | BPL => "BPL"
+  | BRK => "BRK"
+  | BVC => "BVC"
+  | BVS => "BVS"
+  | CLC => "CLC"
+  | CLD => "CLD"
+  | CLI => "CLI"
+  | CLV => "CLV"
+  | CMP => "CMP"
+  | CPX => "CPX"
+  | CPY => "CPY"
+  | DEC => "DEC"
+  | DEX => "DEX"
+  | DEY => "DEY"
+  | EOR => "EOR"
+  | INC => "INC"
+  | INX => "INX"
+  | INY => "INY"
+  | JMP => "JMP"
+  | JSR => "JSR"
+  | LDA => "LDA"
+  | LDX => "LDX"
+  | LDY => "LDY"
+  | LSR => "LSR"
+  | NOP => "NOP"
+  | ORA => "ORA"
+  | PHA => "PHA"
+  | PHP => "PHP"
+  | PLA => "PLA"
+  | PLP => "PLP"
+  | ROL => "ROL"
+  | ROR => "ROR"
+  | RTI => "RTI"
+  | RTS => "RTS"
+  | SBC => "SBC"
+  | SEC => "SEC"
+  | SED => "SED"
+  | SEI => "SEI"
+  | STA => "STA"
+  | STX => "STX"
+  | STY => "STY"
+  | TAX => "TAX"
+  | TAY => "TAY"
+  | TSX => "TSX"
+  | TXA => "TXA"
+  | TXS => "TXS"
+  | TYA => "TYA"
+  }
