@@ -235,7 +235,7 @@ let get_operand_address = (cpu, mode) =>
     let sum = cpu.register_a + data + cpu.c
     cpu.c = sum > 0xff ? 1 : 0
     let result = land(sum, 0xff)
-    cpu.v = if land(land(lxor(data, result), lxor(result, cpu.register_a)), 0x80) === 1 {
+    cpu.v = if lxor(data, result)->land(lxor(result, cpu.register_a))->land(0x80) !== 0 {
       1
     } else {
       0
