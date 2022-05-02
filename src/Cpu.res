@@ -17,7 +17,6 @@ type cpu = {
   mutable register_y: int,
   mutable stack_pointer: int,
   mutable pc: int,
-  mutable stack: int,
   mutable jumped: bool, // whether pc just jump from other place
   mutable n: int,
   mutable v: int,
@@ -29,8 +28,9 @@ type cpu = {
   mutable c: int,
   bus: Bus.bus,
 }
+let stack = 0x0100
 let stack_init_val = 0xfd
-let stack_reset = cpu => cpu.stack = stack_init_val
+let stack_reset = cpu => cpu.stack_pointer = stack_init_val
 
 let status_2_vector = cpu => {
   cpu.n * 128 + cpu.v * 64 + cpu.g * 32 + cpu.b * 16 + cpu.d * 8 + cpu.i * 4 + cpu.z * 2 + cpu.c
@@ -54,10 +54,9 @@ let new = bus => {
     register_a: 0,
     register_x: 0,
     register_y: 0,
-    stack_pointer: 0,
+    stack_pointer: stack_init_val,
     pc: 0,
     bus: bus,
-    stack: stack_init_val,
     jumped: false,
     n: 0,
     v: 0,
@@ -88,7 +87,7 @@ let mem_write_2bytes = (cpu, addr, data) => {
 }
 %%private(
   let stack_push = (cpu, data) => {
-    mem_write(cpu, cpu.stack + cpu.stack_pointer, data)
+    mem_write(cpu, stack + cpu.stack_pointer, data)
     cpu.stack_pointer = cpu.stack_pointer - 1
   }
   let stack_push_2bytes = (cpu, data) => {
@@ -100,7 +99,7 @@ let mem_write_2bytes = (cpu, addr, data) => {
 )
 let stack_pop = cpu => {
   cpu.stack_pointer = cpu.stack_pointer + 1
-  mem_read(cpu, cpu.stack + cpu.stack_pointer)
+  mem_read(cpu, stack + cpu.stack_pointer)
 }
 let stack_pop_2bytes = cpu => {
   let lo = stack_pop(cpu)
@@ -422,7 +421,6 @@ let get_operand_address = (cpu, mode) =>
   }
   let pla = cpu => {
     let data = stack_pop(cpu)
-    Js.log(data->Js.Int.toStringWithRadix(~radix=16))
     cpu.register_a = load_to_register(cpu, data)
   }
   let plp = cpu => {

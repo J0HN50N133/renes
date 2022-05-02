@@ -258,6 +258,7 @@ let instruction_table = Belt.HashMap.fromArray(
     new(0x8C, STY, 4, Absolute),
     new(0xAA, TAX, 2, NoneAddressing),
     new(0xA8, TAY, 2, NoneAddressing),
+    new(0xBA, TSX, 2, NoneAddressing),
     new(0x8A, TXA, 2, NoneAddressing),
     new(0x9A, TXS, 2, NoneAddressing),
     new(0x98, TYA, 2, NoneAddressing),
