@@ -411,13 +411,12 @@ let get_operand_address = (cpu, mode) =>
   let pc_safe = _ => true
   // cpu => cpu.pc <= Bus.ram_mirrors_end
   let php = cpu => {
-    let vector = status_2_vector(cpu)
-    cpu.g = 1
-    cpu.b = 1
+    let vector = status_2_vector(cpu)->lor(0b0001_0000)->lor(0b0010_0000)
     stack_push(cpu, vector)
   }
   let pla = cpu => {
     let data = stack_pop(cpu)
+    Js.log(data->Js.Int.toStringWithRadix(~radix=16))
     cpu.register_a = load_to_register(cpu, data)
   }
   let plp = cpu => {
