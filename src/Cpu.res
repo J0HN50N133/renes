@@ -280,7 +280,7 @@ let get_operand_address = (cpu, mode) =>
   let asl = (cpu, mode) => {
     let val = get_operand_value_in_mem_or_a(cpu, mode)
     cpu.c = land(lsr(val, 7), 1)
-    write_operand_to_mem_or_a(cpu, mode, lsl(val, 1))
+    write_operand_to_mem_or_a(cpu, mode, lsl(val, 1)->land(0xFF))
   }
   let lsr_ = (cpu, mode) => {
     let val = get_operand_value_in_mem_or_a(cpu, mode)
