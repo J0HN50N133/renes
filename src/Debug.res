@@ -88,14 +88,14 @@ let trace = (cpu: Cpu.cpu) => {
       | ZeroPage_X => `$${f(addr)},X @ ${f(mem_addr)} = ${f(stored_value)}`
       | ZeroPage_Y => `$${f(addr)},Y @ ${f(mem_addr)} = ${f(stored_value)}`
       | Indirect_X =>
-        `(${f(addr)},X) @ ${(addr + cpu.register_x)->mod(8)->f} = ${mem_addr
+        `(${f(addr)},X) @ ${(addr + cpu.register_x)->mod(0x100)->f} = ${mem_addr
           ->hexrep
           ->fill0(4)} = ${f(stored_value)}`
       | Indirect_Y =>
-        `(${f(addr)},Y) @ ${(addr - cpu.register_y)->mod(8)->f} = ${mem_addr
+        `(${f(addr)},Y) @ ${(addr - cpu.register_y)->mod(0x100)->f} = ${mem_addr
           ->hexrep
           ->fill0(4)} = ${f(stored_value)}`
-      | Relative => f4(addr)
+      | Relative => `$${f4(mod(begin + addr + 2, 0x10000))}`
       | _ => failwith("Unexpected")
       }
     }
