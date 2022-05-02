@@ -369,8 +369,8 @@ let get_operand_address = (cpu, mode) =>
     let m = mem_read(cpu, addr)
     let temp = land(m, cpu.register_a)
     cpu.z = temp === 0 ? 1 : 0
-    cpu.n = land(lsl(m, 7), 1)
-    cpu.v = land(lsl(m, 6), 1)
+    cpu.n = land(lsr(m, 7), 1)
+    cpu.v = land(lsr(m, 6), 1)
   }
   let lda = (cpu, mode) => {
     let addr = get_operand_address(cpu, mode)
