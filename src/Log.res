@@ -1,4 +1,4 @@
-C000  4C F5 C5  JMP $C5F5                       A:00 X:00 Y:00 P:24 SP:FD
+let expected = `C000  4C F5 C5  JMP $C5F5                       A:00 X:00 Y:00 P:24 SP:FD
 C5F5  A2 00     LDX #$00                        A:00 X:00 Y:00 P:24 SP:FD
 C5F7  86 00     STX $00 = 00                    A:00 X:00 Y:00 P:26 SP:FD
 C5F9  86 10     STX $10 = 00                    A:00 X:00 Y:00 P:26 SP:FD
@@ -8988,4 +8988,4 @@ C69A  8D 06 40  STA $4006 = FF                  A:FF X:FF Y:15 P:A5 SP:FB
 C69D  A9 00     LDA #$00                        A:FF X:FF Y:15 P:A5 SP:FB
 C69F  8D 07 40  STA $4007 = FF                  A:00 X:FF Y:15 P:27 SP:FB
 C6A2  60        RTS                             A:00 X:FF Y:15 P:27 SP:FB
-C66E  60        RTS                             A:00 X:FF Y:15 P:27 SP:FD
+C66E  60        RTS                             A:00 X:FF Y:15 P:27 SP:FD`

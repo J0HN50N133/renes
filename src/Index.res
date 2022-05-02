@@ -4,6 +4,7 @@ module Evt = Webapi.Dom.Event
 module Canvas = Webapi.Canvas
 module CElem = Webapi.Canvas.CanvasElement
 module C2d = Webapi.Canvas.Canvas2d
+%%raw(`import "../../../node_modules/diff/dist/diff.js";`)
 let unwrapUnsafely = x =>
   switch x {
   | Some(v) => v
@@ -29,6 +30,25 @@ let loadBinaryData = raw => {
   let rom = Rom.new(raw->Uint8Array.fromBuffer)
   Belt.Result.getExn(rom)
 }
+let diffLog = %raw(`
+function(one, other){
+  const diff = Diff.diffLines(one, other),
+      display = document.getElementById('display'),
+      fragment = document.createDocumentFragment();
+  diff.forEach((part) => {
+  // green for additions, red for deletions
+  // grey for common parts
+    const color = part.added ? 'green' :
+      part.removed ? 'red' : 'grey';
+    let span = document.createElement('span');
+    span.style.color = color;
+    span.appendChild(document
+      .createTextNode(part.value));
+    fragment.appendChild(span);
+  });
+  display.appendChild(fragment);
+}
+`)
 let runRom = rom => {
   let cpu = Cpu.new(Bus.new(rom))
   let break = ref(false)
@@ -39,7 +59,13 @@ let runRom = rom => {
     canvasEl->Canvas.CanvasElement.getContext2d->C2d.createImageDataCoords(~width=32., ~height=32.)
   Cpu.reset(cpu)
   cpu.pc = 0xC000
-  cpu->Cpu.run_with_callback([cpu => Js.log(Debug.trace(cpu)), Debug.debug])
+  let log = ref("")
+  try {
+    cpu->Cpu.run_with_callback([cpu => log := log.contents ++ Debug.trace(cpu)])
+  } catch {
+  | _ => diffLog(log.contents, Log.expected)
+  // Js.log(log.contents)
+  }
   /*
   setInterval(() => {
     Cpu.step(
