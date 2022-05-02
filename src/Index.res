@@ -63,9 +63,9 @@ let runRom = rom => {
   try {
     cpu->Cpu.run_with_callback([cpu => log := log.contents ++ Debug.trace(cpu)])
   } catch {
-  | _ => diffLog(log.contents, Log.expected)
-  // Js.log(log.contents)
+  | e => Js.log(e)
   }
+  let _ = diffLog(log.contents, Log.expected)
   /*
   setInterval(() => {
     Cpu.step(

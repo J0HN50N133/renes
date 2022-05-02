@@ -145,5 +145,5 @@ let trace = (cpu: Cpu.cpu) => {
   " P:" ++
   cpu->Cpu.status_2_vector->hexrep->fill0(2) ++
   " SP:" ++
-  (cpu.stack + cpu.stack_pointer)->hexrep->fill0(2) ++ "\n")->Js.String2.toUpperCase
+  cpu.stack_pointer->hexrep->fill0(2) ++ "\n")->Js.String2.toUpperCase
 }
