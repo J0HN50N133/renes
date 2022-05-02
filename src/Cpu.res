@@ -46,7 +46,9 @@ let vector_2_status = (cpu, vector) => {
   cpu.z = land(vector, 0b0000_0010) === 0 ? 0 : 1
   cpu.c = land(vector, 0b0000_0001) === 0 ? 0 : 1
 }
-
+let wrapping_neg = (num, width) => {
+  land(-num, lsl(1, width) - 1)
+}
 let new = bus => {
   {
     register_a: 0,
@@ -105,24 +107,24 @@ let stack_pop_2bytes = cpu => {
   let hi = stack_pop(cpu)
   lor(lsl(hi, 8), lo)
 }
-let update_zero_flag = (cpu, result) => {
+let update_Z = (cpu, result) => {
   cpu.z = switch result {
   | 0 => 1
   | _ => 0
   }
 }
-let update_negative_flag = (cpu, result) => {
+let update_N = (cpu, result) => {
   cpu.n = switch land(result, 0b1000_0000) {
   | 0 => 0
   | _ => 1
   }
 }
-let update_zero_and_negative_flags = (cpu, result) => {
-  update_zero_flag(cpu, result)
-  update_negative_flag(cpu, result)
+let update_ZN = (cpu, result) => {
+  update_Z(cpu, result)
+  update_N(cpu, result)
 }
 
-let update_overflow_flag_and_prune_result = (cpu, result) => {
+let update_V = (cpu, result) => {
   cpu.v = switch result {
   | _ if result > 0xff => 1
   | _ => 0
@@ -151,6 +153,10 @@ let wrapping_add_with_carry = (bits, a, b) => {
 let wrapping_add = (bits, a, b) => {
   let (x, _) = wrapping_add_with_carry(bits, a, b)
   x
+}
+let wrapping_bit = (num, width) => {
+  let bound = width->float_of_int->(x => 2. ** x)->int_of_float
+  mod(num, bound)
 }
 
 let wrapping_add_8 = wrapping_add(8)
@@ -228,7 +234,7 @@ let get_operand_address = (cpu, mode) =>
 
 %%private(
   let load_to_register = (cpu, value) => {
-    update_zero_and_negative_flags(cpu, value)
+    update_ZN(cpu, value)
     value
   }
   let add_to_register_a = (cpu, data) => {
@@ -251,7 +257,7 @@ let get_operand_address = (cpu, mode) =>
     let addr = get_operand_address(cpu, mode)
     let m = mem_read(cpu, addr)
     cpu.register_a = op(cpu.register_a, m)
-    update_zero_and_negative_flags(cpu, cpu.register_a)
+    update_ZN(cpu, cpu.register_a)
   }
   let and_ = (cpu, mode) => {logic_and_or_op(cpu, mode, land)}
   let ora = (cpu, mode) => {logic_and_or_op(cpu, mode, lor)}
@@ -270,7 +276,7 @@ let get_operand_address = (cpu, mode) =>
     | NoneAddressing => cpu.register_a = wrap_value
     | _ => mem_write(cpu, get_operand_address(cpu, mode), wrap_value)
     }
-    update_zero_and_negative_flags(cpu, value)
+    update_ZN(cpu, value)
   }
   let asl = (cpu, mode) => {
     let val = get_operand_value_in_mem_or_a(cpu, mode)
@@ -316,14 +322,14 @@ let get_operand_address = (cpu, mode) =>
     } else {
       0
     }
-    update_zero_and_negative_flags(cpu, compare_with - m)
+    update_ZN(cpu, compare_with - m)
   }
   let cmp = (cpu, mode) => compare(cpu, mode, cpu.register_a)
   let cpx = (cpu, mode) => compare(cpu, mode, cpu.register_x)
   let cpy = (cpu, mode) => compare(cpu, mode, cpu.register_y)
   let decrease = (cpu, value) => {
     let temp = land(value - 1, 0xff)
-    update_zero_and_negative_flags(cpu, temp)
+    update_ZN(cpu, temp)
     temp
   }
   let dec = (cpu, mode) => {
@@ -341,11 +347,11 @@ let get_operand_address = (cpu, mode) =>
     let addr = get_operand_address(cpu, mode)
     let m = mem_read(cpu, addr)
     cpu.register_a = lxor(m, cpu.register_a)
-    update_zero_and_negative_flags(cpu, cpu.register_a)
+    update_ZN(cpu, cpu.register_a)
   }
   let increase = (cpu, value) => {
     let temp = land(value + 1, 0xff)
-    update_zero_and_negative_flags(cpu, temp)
+    update_ZN(cpu, temp)
     temp
   }
   let inc = (cpu, mode) => {
@@ -430,7 +436,7 @@ let get_operand_address = (cpu, mode) =>
   let sbc = (cpu, mode) => {
     let addr = get_operand_address(cpu, mode)
     let m = mem_read(cpu, addr)
-    add_to_register_a(cpu, -m - 1)
+    add_to_register_a(cpu, lxor(m, 0xFF))
   }
   let rol = (cpu, mode) => {
     let m = ref(get_operand_value_in_mem_or_a(cpu, mode))
