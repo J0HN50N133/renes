@@ -91,9 +91,9 @@ let trace = (cpu: Cpu.cpu) => {
           ->hexrep
           ->fill0(4)} = ${f2(stored_value)}`
       | Indirect_Y =>
-        `($${f2(addr)}),Y = ${(mem_addr - cpu.register_y)->f4} @ ${mem_addr->f4} = ${f2(
-            stored_value,
-          )}`
+        `($${f2(addr)}),Y = ${(mem_addr - cpu.register_y)
+          ->land(0xFFFF)
+          ->f4} @ ${mem_addr->f4} = ${f2(stored_value)}`
       | Relative => `$${f4(mod(begin + addr + 2, 0x10000))}`
       | _ => failwith("Unexpected")
       }

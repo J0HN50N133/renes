@@ -145,8 +145,8 @@ let reset = cpu => {
 }
 let wrapping_add_with_carry = (bits, a, b) => {
   let sum = a + b
-  let bound = bits->float_of_int->(x => 2. ** x)->int_of_float
-  (mod(sum, bound), sum / bound)
+  let bound = lsl(1, bits)
+  (mod(sum, bound), land(sum, bound - 1))
 }
 
 let wrapping_add = (bits, a, b) => {
@@ -178,12 +178,15 @@ let get_absolute_addr = (cpu, mode, addr) => {
   | Absolute => mem_read_2bytes(cpu, addr)
   | ZeroPage_X => {
       let pos = mem_read(cpu, addr)
-      let addr = wrapping_add_16(pos, cpu.register_x)
+      let addr = wrapping_add_8(pos, cpu.register_x)
       addr
     }
   | ZeroPage_Y => {
       let pos = mem_read(cpu, addr)
-      let addr = wrapping_add_16(pos, cpu.register_y)
+      let addr = wrapping_add_8(pos, cpu.register_y)
+      if addr > 0xFF {
+        Js.log(addr)
+      }
       addr
     }
   | Absolute_X => {
