@@ -46,9 +46,6 @@ let vector_2_status = (cpu, vector) => {
   cpu.z = land(vector, 0b0000_0010) === 0 ? 0 : 1
   cpu.c = land(vector, 0b0000_0001) === 0 ? 0 : 1
 }
-let wrapping_neg = (num, width) => {
-  land(-num, lsl(1, width) - 1)
-}
 let new = bus => {
   {
     register_a: 0,
@@ -143,15 +140,27 @@ let reset = cpu => {
   cpu.pc = mem_read_2bytes(cpu, 0xFFFC)
   stack_reset(cpu)
 }
+let wrapping_neg = (width, num) => {
+  land(-num, lsl(1, width) - 1)
+}
 let wrapping_add_with_carry = (bits, a, b) => {
   let sum = a + b
   let bound = lsl(1, bits)
-  (mod(sum, bound), land(sum, bound - 1))
+  (mod(sum, bound), sum / bound)
 }
 
 let wrapping_add = (bits, a, b) => {
   let (x, _) = wrapping_add_with_carry(bits, a, b)
   x
+}
+
+let wrapping_sub = (width, a, b) => {
+  if a === 0xEB && b == 1 {
+    Js.log(a)
+    Js.log(b)
+    Js.log(wrapping_neg(width, b))
+  }
+  wrapping_add(width, a, wrapping_neg(width, b))
 }
 let wrapping_bit = (num, width) => {
   let bound = width->float_of_int->(x => 2. ** x)->int_of_float
@@ -162,6 +171,8 @@ let wrapping_add_8 = wrapping_add(8)
 let wrapping_add_with_carry_8 = wrapping_add_with_carry(8)
 let wrapping_add_16 = wrapping_add(16)
 let wrapping_add_with_carry_16 = wrapping_add_with_carry(16)
+let wrapping_sub_8 = wrapping_sub(8)
+let wrapping_sub_16 = wrapping_sub(16)
 let get_absolute_addr = (cpu, mode, addr) => {
   switch mode {
   | Relative => {
@@ -392,6 +403,12 @@ let get_operand_address = (cpu, mode) =>
     let addr = get_operand_address(cpu, mode)
     cpu.register_y = load_to_register(cpu, mem_read(cpu, addr))
   }
+  let lax = (cpu, mode) => {
+    let addr = get_operand_address(cpu, mode)
+    let mem = mem_read(cpu, addr)
+    cpu.register_a = load_to_register(cpu, mem)
+    cpu.register_x = load_to_register(cpu, mem)
+  }
   let tax = cpu => {cpu.register_x = load_to_register(cpu, cpu.register_a)}
   let tay = cpu => {cpu.register_y = load_to_register(cpu, cpu.register_a)}
   let tya = cpu => {cpu.register_a = load_to_register(cpu, cpu.register_y)}
@@ -406,6 +423,17 @@ let get_operand_address = (cpu, mode) =>
   let sta = (cpu, mode) => store(cpu, mode, cpu.register_a)
   let stx = (cpu, mode) => store(cpu, mode, cpu.register_x)
   let sty = (cpu, mode) => store(cpu, mode, cpu.register_y)
+  let sax = (cpu, mode) => store(cpu, mode, land(cpu.register_a, cpu.register_x))
+  let dcp = (cpu, mode) => {
+    let addr = get_operand_address(cpu, mode)
+    let data = mem_read(cpu, addr)
+    let data = data->wrapping_sub_8(1)
+    cpu->mem_write(addr, data)
+    if data <= cpu.register_a {
+      cpu.c = 1
+    }
+    update_ZN(cpu, cpu.register_a->wrapping_sub_8(data))
+  }
   let load_to = (cpu, addr, program) => {
     cpu.pc = addr
     let len = Uint8Array.length(program)
@@ -550,6 +578,9 @@ let step = (cpu, callback_list, break) => {
     | NOP => ()
     | RTI => rti(cpu)
     | RTS => rts(cpu)
+    | LAX => lax(cpu, i.mode)
+    | SAX => sax(cpu, i.mode)
+    | DCP => dcp(cpu, i.mode)
     }
     switch cpu.jumped {
     | false => cpu.pc = cpu.pc + i.len - 1

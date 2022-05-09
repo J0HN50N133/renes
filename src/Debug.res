@@ -5,14 +5,14 @@ open Belt
 let hexrep = i => i->Js.Int.toStringWithRadix(~radix=16)
 let bindump = i => i->Js.Int.toStringWithRadix(~radix=2)
 type l_or_r = L | R
-let fill_with = (~l_or_r=R, s, w, c) => {
+let padding = (~l_or_r=R, s, w, c) => {
   let lack = Js.Math.max_int(w - s->Js.String2.length, 0)
   switch l_or_r {
   | R => s ++ Js.String2.repeat(c, lack)
   | L => Js.String2.repeat(c, lack) ++ s
   }
 }
-let fill0 = (s, w) => {
+let padding_with_0 = (s, w) => {
   let lack = Js.Math.max_int(w - s->Js.String2.length, 0)
   Js.String2.repeat("0", lack) ++ s
 }
@@ -70,8 +70,8 @@ let trace = (cpu: Cpu.cpu) => {
       (addr, cpu->Cpu.mem_read(addr))
     }
   }
-  let f2 = addr => addr->hexrep->fill0(2)
-  let f4 = addr => addr->hexrep->fill0(4)
+  let f2 = addr => addr->hexrep->padding_with_0(2)
+  let f4 = addr => addr->hexrep->padding_with_0(4)
   let tmp = switch ops.len {
   | 1 =>
     switch ops.bin {
@@ -89,12 +89,23 @@ let trace = (cpu: Cpu.cpu) => {
       | Indirect_X =>
         `($${f2(addr)},X) @ ${(addr + cpu.register_x)->mod(0x100)->f2} = ${mem_addr
           ->hexrep
-          ->fill0(4)} = ${f2(stored_value)}`
+          ->padding_with_0(4)} = ${f2(stored_value)}`
       | Indirect_Y =>
         `($${f2(addr)}),Y = ${(mem_addr - cpu.register_y)
           ->land(0xFFFF)
           ->f4} @ ${mem_addr->f4} = ${f2(stored_value)}`
-      | Relative => `$${f4(mod(begin + addr + 2, 0x10000))}`
+      | Relative =>
+        `$${f4(
+            mod(
+              begin +
+              if addr < 0x80 {
+                addr
+              } else {
+                addr - 256
+              } + 2,
+              0x10000,
+            ),
+          )}`
       | _ => failwith("Unexpected")
       }
     }
@@ -113,7 +124,7 @@ let trace = (cpu: Cpu.cpu) => {
           } else {
             cpu->Cpu.mem_read_2bytes(addr)
           }
-          `($${f4(addr)}) = ${jmp_addr->hexrep->fill0(4)}`
+          `($${f4(addr)}) = ${jmp_addr->hexrep->padding_with_0(4)}`
         }
       | NoneAddressing => `$${f4(addr)}`
       | Absolute =>
@@ -130,19 +141,22 @@ let trace = (cpu: Cpu.cpu) => {
   }
   let hex_str = hexdump.contents->Belt.Array.joinWith(" ", f2)
   let asm_str =
-    `${f4(begin)}  ${hex_str->fill_with(8, " ")} ${Instruction.string_of_opcode(
-        ops.code,
-      )->fill_with(~l_or_r=L, _, 4, " ")} ${tmp}`->Js.String2.trim
+    `${f4(begin)}  ${hex_str->padding(8, " ")} ${Instruction.string_of_opcode(ops)->padding(
+        ~l_or_r=L,
+        _,
+        4,
+        " ",
+      )} ${tmp}`->Js.String2.trim
 
-  (asm_str->fill_with(47, " ") ++
+  (asm_str->padding(47, " ") ++
   " A:" ++
-  cpu.register_a->hexrep->fill0(2) ++
+  cpu.register_a->hexrep->padding_with_0(2) ++
   " X:" ++
-  cpu.register_x->hexrep->fill0(2) ++
+  cpu.register_x->hexrep->padding_with_0(2) ++
   " Y:" ++
-  cpu.register_y->hexrep->fill0(2) ++
+  cpu.register_y->hexrep->padding_with_0(2) ++
   " P:" ++
-  cpu->Cpu.status_2_vector->hexrep->fill0(2) ++
+  cpu->Cpu.status_2_vector->hexrep->padding_with_0(2) ++
   " SP:" ++
-  cpu.stack_pointer->hexrep->fill0(2) ++ "\n")->Js.String2.toUpperCase
+  cpu.stack_pointer->hexrep->padding_with_0(2) ++ "\n")->Js.String2.toUpperCase
 }
