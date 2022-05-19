@@ -465,6 +465,7 @@ let get_operand_address = (cpu, mode) =>
     m := lsl(m.contents, 1)
     m := lor(m.contents, old_c)
     write_operand_to_mem_or_a(cpu, mode, m.contents)
+    m.contents
   }
   let ror = (cpu, mode) => {
     let m = ref(get_operand_value_in_mem_or_a(cpu, mode))
@@ -494,6 +495,11 @@ let get_operand_address = (cpu, mode) =>
     cpu.i = 1
     cpu->stack_push(cpu.pc + 1)
     cpu->stack_push(cpu->status_2_vector)
+  }
+  let rla = (cpu, mode) => {
+    let data = rol(cpu, mode)
+    cpu.register_a = land(cpu.register_a, data)
+    cpu->update_ZN(cpu.register_a)
   }
 )
 let step = (cpu, callback_list, break) => {
@@ -557,7 +563,8 @@ let step = (cpu, callback_list, break) => {
     | PHP => php(cpu)
     | PLA => pla(cpu)
     | PLP => plp(cpu)
-    | ROL => rol(cpu, i.mode)
+    | ROL =>
+      let _ = rol(cpu, i.mode)
     | ROR => ror(cpu, i.mode)
     | SEC => cpu.c = 1
     | SED => cpu.d = 1
@@ -571,6 +578,7 @@ let step = (cpu, callback_list, break) => {
     | DCP => dcp(cpu, i.mode)
     | ISB => isb(cpu, i.mode)
     | SLO => slo(cpu, i.mode)
+    | RLA => rla(cpu, i.mode)
     }
     switch cpu.jumped {
     | false => cpu.pc = cpu.pc + i.len - 1
