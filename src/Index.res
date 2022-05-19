@@ -42,6 +42,9 @@ function(one, other){
       part.removed ? 'red' : 'grey';
     let span = document.createElement('span');
     span.style.color = color;
+    if(!part.added && !part.removed){
+      part.value = part.value.slice(part.value.lastIndexOf('\n', part.value.length - 2)+1)
+    }
     span.appendChild(document
       .createTextNode(part.value));
     fragment.appendChild(span);
