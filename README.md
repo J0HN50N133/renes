@@ -10,8 +10,8 @@ Inspired by [Writing NES Emulator in Rust](https://bugzmanov.github.io/nes_ebook
 ![](https://bugzmanov.github.io/nes_ebook/images/ch2/image_3_nes_components.png)
 
 - [x] CPU
-- [ ] BUS
-- [ ] Read Rom
+- [x] BUS
+- [x] Read Rom
 - [ ] PPU
 - [ ] GamePad
 - [ ] APU

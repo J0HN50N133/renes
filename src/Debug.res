@@ -1,21 +1,7 @@
 open Cpu
 open Instruction
 open Belt
-
-let hexrep = i => i->Js.Int.toStringWithRadix(~radix=16)
-let bindump = i => i->Js.Int.toStringWithRadix(~radix=2)
-type l_or_r = L | R
-let padding = (~l_or_r=R, s, w, c) => {
-  let lack = Js.Math.max_int(w - s->Js.String2.length, 0)
-  switch l_or_r {
-  | R => s ++ Js.String2.repeat(c, lack)
-  | L => Js.String2.repeat(c, lack) ++ s
-  }
-}
-let padding_with_0 = (s, w) => {
-  let lack = Js.Math.max_int(w - s->Js.String2.length, 0)
-  Js.String2.repeat("0", lack) ++ s
-}
+open Utils
 
 type info = {
   mutable pc: string,
@@ -38,17 +24,17 @@ let debug_limit = (cpu: Cpu.cpu, limit: int) => {
   }
   if limit == -1 || count.contents < limit {
     let pc = cpu.pc
-    let pchex = "0x" ++ pc->hexrep
+    let pchex = "0x" ++ pc->hexdump
     let instruction = switch HashMap.get(instruction_table, Cpu.mem_read(cpu, pc)) {
-    | Some(ins) => "0x" ++ ins.bin->hexrep
+    | Some(ins) => "0x" ++ ins.bin->hexdump
     | None => "Decode Error"
     }
     let status = Cpu.status_2_vector(cpu)->bindump
     let status = Js.String.repeat(8 - String.length(status), "0") ++ status
     i.pc = pchex
-    i.a = "0x" ++ cpu.register_a->hexrep
-    i.x = "0x" ++ cpu.register_x->hexrep
-    i.y = "0x" ++ cpu.register_y->hexrep
+    i.a = "0x" ++ cpu.register_a->hexdump
+    i.x = "0x" ++ cpu.register_x->hexdump
+    i.y = "0x" ++ cpu.register_y->hexdump
     i.op_code = instruction
     i.status = status
     Js.log(i)
@@ -61,8 +47,8 @@ let trace = (cpu: Cpu.cpu) => {
   let code = cpu->Cpu.mem_read(cpu.pc)
   let ops = instruction_table->HashMap.get(code)->Option.getExn
   let begin = cpu.pc
-  let hexdump = ref([])
-  let _ = hexdump.contents->Js.Array2.push(code)
+  let hexdump_data = ref([])
+  let _ = hexdump_data.contents->Js.Array2.push(code)
   let (mem_addr, stored_value) = switch ops.mode {
   | Immediate | NoneAddressing => (0, 0)
   | _ => {
@@ -70,8 +56,8 @@ let trace = (cpu: Cpu.cpu) => {
       (addr, cpu->Cpu.mem_read(addr))
     }
   }
-  let f2 = addr => addr->hexrep->padding_with_0(2)
-  let f4 = addr => addr->hexrep->padding_with_0(4)
+  let f2 = addr => addr->hexdump->padding_with_0(2)
+  let f4 = addr => addr->hexdump->padding_with_0(4)
   let tmp = switch ops.len {
   | 1 =>
     switch ops.bin {
@@ -80,7 +66,7 @@ let trace = (cpu: Cpu.cpu) => {
     }
   | 2 => {
       let addr = cpu->Cpu.mem_read(begin + 1)
-      let _ = hexdump.contents->Js.Array2.push(addr)
+      let _ = hexdump_data.contents->Js.Array2.push(addr)
       switch ops.mode {
       | Immediate => `#$${f2(addr)}`
       | ZeroPage => `$${f2(addr)} = ${f2(stored_value)}`
@@ -88,7 +74,7 @@ let trace = (cpu: Cpu.cpu) => {
       | ZeroPage_Y => `$${f2(addr)},Y @ ${f2(mem_addr)} = ${f2(stored_value)}`
       | Indirect_X =>
         `($${f2(addr)},X) @ ${(addr + cpu.register_x)->mod(0x100)->f2} = ${mem_addr
-          ->hexrep
+          ->hexdump
           ->padding_with_0(4)} = ${f2(stored_value)}`
       | Indirect_Y =>
         `($${f2(addr)}),Y = ${(mem_addr - cpu.register_y)
@@ -112,8 +98,8 @@ let trace = (cpu: Cpu.cpu) => {
   | 3 => {
       let addr_lo = cpu->Cpu.mem_read(begin + 1)
       let addr_hi = cpu->Cpu.mem_read(begin + 2)
-      let _ = hexdump.contents->Js.Array2.push(addr_lo)
-      let _ = hexdump.contents->Js.Array2.push(addr_hi)
+      let _ = hexdump_data.contents->Js.Array2.push(addr_lo)
+      let _ = hexdump_data.contents->Js.Array2.push(addr_hi)
       let addr = cpu->Cpu.mem_read_2bytes(begin + 1)
       switch ops.mode {
       | Indirect => {
@@ -124,7 +110,7 @@ let trace = (cpu: Cpu.cpu) => {
           } else {
             cpu->Cpu.mem_read_2bytes(addr)
           }
-          `($${f4(addr)}) = ${jmp_addr->hexrep->padding_with_0(4)}`
+          `($${f4(addr)}) = ${jmp_addr->hexdump->padding_with_0(4)}`
         }
       | NoneAddressing => `$${f4(addr)}`
       | Absolute =>
@@ -139,7 +125,7 @@ let trace = (cpu: Cpu.cpu) => {
     }
   | _ => failwith("unknown op length")
   }
-  let hex_str = hexdump.contents->Belt.Array.joinWith(" ", f2)
+  let hex_str = hexdump_data.contents->Belt.Array.joinWith(" ", f2)
   let asm_str =
     `${f4(begin)}  ${hex_str->padding(8, " ")} ${Instruction.string_of_opcode(ops)->padding(
         ~l_or_r=L,
@@ -150,13 +136,13 @@ let trace = (cpu: Cpu.cpu) => {
 
   (asm_str->padding(47, " ") ++
   " A:" ++
-  cpu.register_a->hexrep->padding_with_0(2) ++
+  cpu.register_a->hexdump->padding_with_0(2) ++
   " X:" ++
-  cpu.register_x->hexrep->padding_with_0(2) ++
+  cpu.register_x->hexdump->padding_with_0(2) ++
   " Y:" ++
-  cpu.register_y->hexrep->padding_with_0(2) ++
+  cpu.register_y->hexdump->padding_with_0(2) ++
   " P:" ++
-  cpu->Cpu.status_2_vector->hexrep->padding_with_0(2) ++
+  cpu->Cpu.status_2_vector->hexdump->padding_with_0(2) ++
   " SP:" ++
-  cpu.stack_pointer->hexrep->padding_with_0(2) ++ "\n")->Js.String2.toUpperCase
+  cpu.stack_pointer->hexdump->padding_with_0(2) ++ "\n")->Js.String2.toUpperCase
 }

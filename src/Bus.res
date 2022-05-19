@@ -38,7 +38,7 @@ let mem_read = (bus, addr) => {
   | _ if prg_rom <= addr && addr <= prg_rom_end => bus->read_prg_rom(addr)
   | _ if ppu_registers <= addr && addr <= ppu_registers_mirrors_end => {
       let mask_addr = land(addr, ppu_registers_mask)
-      raise(Utils.Exn.TODO)
+      raise(Utils.Exn.TODO("read ppu_register"))
     }
   | _ => {
       Js.log("Ignoring mem access at 0x" ++ Js.Int.toStringWithRadix(addr, ~radix=16))
@@ -61,7 +61,7 @@ let mem_read_2bytes = (bus, addr) => {
     }
   | _ if ppu_registers <= addr && addr <= ppu_registers_mirrors_end => {
       let mask_addr = land(addr, ppu_registers_mask)
-      raise(Utils.Exn.TODO)
+      raise(Utils.Exn.TODO("read 2 bytes in ppu_registers"))
     }
   | _ => {
       Js.log("Ignoring mem access at 0x" ++ Js.Int.toStringWithRadix(addr, ~radix=16))
@@ -76,7 +76,7 @@ let mem_write = (bus, addr, data) => {
     bus.cpu_vram->U8A.unsafe_set(mask_ram_addr(addr), data)
   | _ if ppu_registers <= addr && addr <= ppu_registers_mirrors_end => {
       let mask_addr = land(addr, ppu_registers_mask)
-      raise(Utils.Exn.TODO)
+      raise(Utils.Exn.TODO("write ppu_registers"))
     }
   | _ if prg_rom <= addr && addr <= prg_rom_end =>
     raise(InvalidWrite("Attempt to write to Cartridge ROM space"))
