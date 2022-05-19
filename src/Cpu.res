@@ -10,6 +10,7 @@
  * C	Carry
  */
 open Instruction
+open Utils
 open Js.TypedArray2
 type cpu = {
   mutable register_a: int,
@@ -140,39 +141,6 @@ let reset = cpu => {
   cpu.pc = mem_read_2bytes(cpu, 0xFFFC)
   stack_reset(cpu)
 }
-let wrapping_neg = (width, num) => {
-  land(-num, lsl(1, width) - 1)
-}
-let wrapping_add_with_carry = (bits, a, b) => {
-  let sum = a + b
-  let bound = lsl(1, bits)
-  (mod(sum, bound), sum / bound)
-}
-
-let wrapping_add = (bits, a, b) => {
-  let (x, _) = wrapping_add_with_carry(bits, a, b)
-  x
-}
-
-let wrapping_sub = (width, a, b) => {
-  if a === 0xEB && b == 1 {
-    Js.log(a)
-    Js.log(b)
-    Js.log(wrapping_neg(width, b))
-  }
-  wrapping_add(width, a, wrapping_neg(width, b))
-}
-let wrapping_bit = (num, width) => {
-  let bound = width->float_of_int->(x => 2. ** x)->int_of_float
-  mod(num, bound)
-}
-
-let wrapping_add_8 = wrapping_add(8)
-let wrapping_add_with_carry_8 = wrapping_add_with_carry(8)
-let wrapping_add_16 = wrapping_add(16)
-let wrapping_add_with_carry_16 = wrapping_add_with_carry(16)
-let wrapping_sub_8 = wrapping_sub(8)
-let wrapping_sub_16 = wrapping_sub(16)
 let get_absolute_addr = (cpu, mode, addr) => {
   switch mode {
   | Relative => {
@@ -189,12 +157,12 @@ let get_absolute_addr = (cpu, mode, addr) => {
   | Absolute => mem_read_2bytes(cpu, addr)
   | ZeroPage_X => {
       let pos = mem_read(cpu, addr)
-      let addr = wrapping_add_8(pos, cpu.register_x)
+      let addr = I8.add(pos, cpu.register_x)
       addr
     }
   | ZeroPage_Y => {
       let pos = mem_read(cpu, addr)
-      let addr = wrapping_add_8(pos, cpu.register_y)
+      let addr = I8.add(pos, cpu.register_y)
       if addr > 0xFF {
         Js.log(addr)
       }
@@ -202,27 +170,27 @@ let get_absolute_addr = (cpu, mode, addr) => {
     }
   | Absolute_X => {
       let base = mem_read_2bytes(cpu, addr)
-      let addr = wrapping_add_16(base, cpu.register_x)
+      let addr = I16.add(base, cpu.register_x)
       addr
     }
   | Absolute_Y => {
       let base = mem_read_2bytes(cpu, addr)
-      let addr = wrapping_add_16(base, cpu.register_y)
+      let addr = I16.add(base, cpu.register_y)
       addr
     }
   | Indirect_X => {
       let base = mem_read(cpu, addr)
-      let ptr = wrapping_add_8(base, cpu.register_x)
+      let ptr = I8.add(base, cpu.register_x)
       let lo = mem_read(cpu, ptr)
-      let hi = mem_read(cpu, wrapping_add_8(ptr, 1))
+      let hi = mem_read(cpu, I8.add(ptr, 1))
       lor(lsl(hi, 8), lo)
     }
   | Indirect_Y => {
       let base = mem_read(cpu, addr)
       let lo = mem_read(cpu, base)
-      let hi = mem_read(cpu, wrapping_add_8(base, 1))
+      let hi = mem_read(cpu, I8.add(base, 1))
       let deref_base = lor(lsl(hi, 8), lo)
-      let deref = wrapping_add_16(deref_base, cpu.register_y)
+      let deref = I16.add(deref_base, cpu.register_y)
       deref
     }
   | Indirect => {
@@ -427,12 +395,12 @@ let get_operand_address = (cpu, mode) =>
   let dcp = (cpu, mode) => {
     let addr = get_operand_address(cpu, mode)
     let data = mem_read(cpu, addr)
-    let data = data->wrapping_sub_8(1)
+    let data = I8.sub(data, 1)
     cpu->mem_write(addr, data)
     if data <= cpu.register_a {
       cpu.c = 1
     }
-    update_ZN(cpu, cpu.register_a->wrapping_sub_8(data))
+    update_ZN(cpu, cpu.register_a->I8.sub(data))
   }
   let load_to = (cpu, addr, program) => {
     cpu.pc = addr
