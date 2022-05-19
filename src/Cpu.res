@@ -164,9 +164,6 @@ let get_absolute_addr = (cpu, mode, addr) => {
   | ZeroPage_Y => {
       let pos = mem_read(cpu, addr)
       let addr = I8.add(pos, cpu.register_y)
-      if addr > 0xFF {
-        Js.log(addr)
-      }
       addr
     }
   | Absolute_X => {
@@ -460,6 +457,7 @@ let get_operand_address = (cpu, mode) =>
     let m = lsr(m, 1)
     let m = lor(m, lsl(old_c, 7))
     write_operand_val(cpu, mode, m)
+    m
   }
   let rti = cpu => {
     let vector = stack_pop(cpu)
@@ -485,6 +483,9 @@ let get_operand_address = (cpu, mode) =>
   let sre = (cpu, mode) => {
     let data = cpu->lsr_(mode)
     cpu->logic_op_to_register_a(data, lxor)
+  }
+  let rra = (cpu, mode) => {
+    cpu->add_to_register_a(ror(cpu, mode))
   }
 )
 let step = (cpu, callback_list, break) => {
@@ -551,7 +552,8 @@ let step = (cpu, callback_list, break) => {
     | PLP => plp(cpu)
     | ROL =>
       let _ = rol(cpu, i.mode)
-    | ROR => ror(cpu, i.mode)
+    | ROR =>
+      let _ = ror(cpu, i.mode)
     | SEC => cpu.c = 1
     | SED => cpu.d = 1
     | SEI => cpu.i = 1
@@ -566,6 +568,7 @@ let step = (cpu, callback_list, break) => {
     | SLO => slo(cpu, i.mode)
     | RLA => rla(cpu, i.mode)
     | SRE => sre(cpu, i.mode)
+    | RRA => rra(cpu, i.mode)
     }
     switch cpu.jumped {
     | false => cpu.pc = cpu.pc + i.len - 1
