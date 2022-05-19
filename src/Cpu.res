@@ -141,6 +141,7 @@ let reset = cpu => {
   cpu.pc = mem_read_2bytes(cpu, 0xFFFC)
   stack_reset(cpu)
 }
+
 let get_absolute_addr = (cpu, mode, addr) => {
   switch mode {
   | Relative => {
