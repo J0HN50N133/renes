@@ -215,9 +215,29 @@ let get_operand_address = (cpu, mode) =>
   }
 
 %%private(
+  let get_operand_val = (cpu, mode) => {
+    switch mode {
+    | NoneAddressing => cpu.register_a
+    | _ => {
+        let addr = get_operand_address(cpu, mode)
+        mem_read(cpu, addr)
+      }
+    }
+  }
+  let write_operand_val = (cpu, mode, value) => {
+    let wrap_value = land(value, 0xff)
+    switch mode {
+    | NoneAddressing => cpu.register_a = wrap_value
+    | _ => mem_write(cpu, get_operand_address(cpu, mode), wrap_value)
+    }
+    update_ZN(cpu, value)
+  }
   let load_to_register = (cpu, value) => {
     update_ZN(cpu, value)
     value
+  }
+  let set_register_a = (cpu, data) => {
+    cpu.register_a = cpu->load_to_register(data)
   }
   let add_to_register_a = (cpu, data) => {
     let sum = cpu.register_a + data + cpu.c
@@ -230,45 +250,20 @@ let get_operand_address = (cpu, mode) =>
     }
     cpu.register_a = load_to_register(cpu, result)
   }
-  let adc = (cpu, mode) => {
-    let addr = get_operand_address(cpu, mode)
-    let m = mem_read(cpu, addr)
-    add_to_register_a(cpu, m)
-  }
-  let logic_and_or_op = (cpu, mode, op) => {
-    let addr = get_operand_address(cpu, mode)
-    let m = mem_read(cpu, addr)
-    cpu.register_a = op(cpu.register_a, m)
-    update_ZN(cpu, cpu.register_a)
-  }
-  let and_ = (cpu, mode) => {logic_and_or_op(cpu, mode, land)}
-  let ora = (cpu, mode) => {logic_and_or_op(cpu, mode, lor)}
-  let get_operand_value_in_mem_or_a = (cpu, mode) => {
-    switch mode {
-    | NoneAddressing => cpu.register_a
-    | _ => {
-        let addr = get_operand_address(cpu, mode)
-        mem_read(cpu, addr)
-      }
-    }
-  }
-  let write_operand_to_mem_or_a = (cpu, mode, value) => {
-    let wrap_value = land(value, 0xff)
-    switch mode {
-    | NoneAddressing => cpu.register_a = wrap_value
-    | _ => mem_write(cpu, get_operand_address(cpu, mode), wrap_value)
-    }
-    update_ZN(cpu, value)
-  }
+  let adc = (cpu, mode) => {add_to_register_a(cpu, get_operand_val(cpu, mode))}
+  let logic_op_to_register_a = (cpu, data, op) => {cpu->set_register_a(op(cpu.register_a, data))}
+  let and_ = (cpu, mode) => {logic_op_to_register_a(cpu, get_operand_val(cpu, mode), land)}
+  let ora = (cpu, mode) => {logic_op_to_register_a(cpu, get_operand_val(cpu, mode), lor)}
   let asl = (cpu, mode) => {
-    let val = get_operand_value_in_mem_or_a(cpu, mode)
+    let val = get_operand_val(cpu, mode)
     cpu.c = land(lsr(val, 7), 1)
-    write_operand_to_mem_or_a(cpu, mode, lsl(val, 1)->land(0xFF))
+    write_operand_val(cpu, mode, lsl(val, 1)->land(0xFF))
   }
   let lsr_ = (cpu, mode) => {
-    let val = get_operand_value_in_mem_or_a(cpu, mode)
+    let val = get_operand_val(cpu, mode)
     cpu.c = land(val, 1)
-    write_operand_to_mem_or_a(cpu, mode, lsr(val, 1))
+    write_operand_val(cpu, mode, lsr(val, 1))
+    lsr(val, 1)
   }
   // return whether the cpu have jumped
   let jmp_if_1 = (value, cpu, mode) => {
@@ -297,8 +292,7 @@ let get_operand_address = (cpu, mode) =>
   let cli = cpu => cpu.i = 0
   let clv = cpu => cpu.v = 0
   let compare = (cpu, mode, compare_with) => {
-    let addr = get_operand_address(cpu, mode)
-    let m = mem_read(cpu, addr)
+    let m = get_operand_val(cpu, mode)
     cpu.c = if m <= compare_with {
       1
     } else {
@@ -310,7 +304,7 @@ let get_operand_address = (cpu, mode) =>
   let cpx = (cpu, mode) => compare(cpu, mode, cpu.register_x)
   let cpy = (cpu, mode) => compare(cpu, mode, cpu.register_y)
   let decrease = (cpu, value) => {
-    let temp = land(value - 1, 0xff)
+    let temp = I8.sub(value, 1)
     update_ZN(cpu, temp)
     temp
   }
@@ -326,10 +320,8 @@ let get_operand_address = (cpu, mode) =>
     cpu.register_y = decrease(cpu, cpu.register_y)
   }
   let eor = (cpu, mode) => {
-    let addr = get_operand_address(cpu, mode)
-    let m = mem_read(cpu, addr)
-    cpu.register_a = lxor(m, cpu.register_a)
-    update_ZN(cpu, cpu.register_a)
+    let m = get_operand_val(cpu, mode)
+    cpu->set_register_a(lxor(m, cpu.register_a))
   }
   let increase = (cpu, value) => {
     let temp = land(value + 1, 0xff)
@@ -355,28 +347,23 @@ let get_operand_address = (cpu, mode) =>
     cpu.jumped = true
   }
   let bit = (cpu, mode) => {
-    let addr = get_operand_address(cpu, mode)
-    let m = mem_read(cpu, addr)
+    let m = get_operand_val(cpu, mode)
     let temp = land(m, cpu.register_a)
     cpu.z = temp === 0 ? 1 : 0
     cpu.n = land(lsr(m, 7), 1)
     cpu.v = land(lsr(m, 6), 1)
   }
   let lda = (cpu, mode) => {
-    let addr = get_operand_address(cpu, mode)
-    cpu.register_a = load_to_register(cpu, mem_read(cpu, addr))
+    cpu.register_a = load_to_register(cpu, get_operand_val(cpu, mode))
   }
   let ldx = (cpu, mode) => {
-    let addr = get_operand_address(cpu, mode)
-    cpu.register_x = load_to_register(cpu, mem_read(cpu, addr))
+    cpu.register_x = load_to_register(cpu, get_operand_val(cpu, mode))
   }
   let ldy = (cpu, mode) => {
-    let addr = get_operand_address(cpu, mode)
-    cpu.register_y = load_to_register(cpu, mem_read(cpu, addr))
+    cpu.register_y = load_to_register(cpu, get_operand_val(cpu, mode))
   }
   let lax = (cpu, mode) => {
-    let addr = get_operand_address(cpu, mode)
-    let mem = mem_read(cpu, addr)
+    let mem = get_operand_val(cpu, mode)
     cpu.register_a = load_to_register(cpu, mem)
     cpu.register_x = load_to_register(cpu, mem)
   }
@@ -418,8 +405,7 @@ let get_operand_address = (cpu, mode) =>
     let (data, carry) = data->I8.lsl_and_carry(1)
     cpu.c = carry
     cpu->mem_write(addr, data)
-    cpu.register_a = lor(cpu.register_a, data)
-    cpu->update_ZN(cpu.register_a)
+    cpu->set_register_a(lor(cpu.register_a, data))
   }
   let load_to = (cpu, addr, program) => {
     cpu.pc = addr
@@ -427,12 +413,10 @@ let get_operand_address = (cpu, mode) =>
     for i in 0 to len - 1 {
       cpu->mem_write(addr + i, Uint8Array.unsafe_get(program, i))
     }
-    // mem_write_2bytes(cpu, 0xFFFC, addr)
   }
   let load = (cpu, program) => {cpu->load_to(0x0600, program)}
 
   let pc_safe = _ => true
-  // cpu => cpu.pc <= Bus.ram_mirrors_end
   let php = cpu => {
     let vector = status_2_vector(cpu)->lor(0b0001_0000)->lor(0b0010_0000)
     stack_push(cpu, vector)
@@ -450,34 +434,32 @@ let get_operand_address = (cpu, mode) =>
   }
   // A - M - ~C == A - M + C - 1
   let sbc = (cpu, mode) => {
-    let addr = get_operand_address(cpu, mode)
-    let m = mem_read(cpu, addr)
-    add_to_register_a(cpu, lxor(m, 0xFF))
+    add_to_register_a(cpu, lxor(get_operand_val(cpu, mode), 0xFF))
   }
   let rol = (cpu, mode) => {
-    let m = ref(get_operand_value_in_mem_or_a(cpu, mode))
+    let m = get_operand_val(cpu, mode)
     let old_c = cpu.c
-    cpu.c = if lsr(m.contents, 7) === 0 {
+    cpu.c = if lsr(m, 7) === 0 {
       0
     } else {
       1
     }
-    m := lsl(m.contents, 1)
-    m := lor(m.contents, old_c)
-    write_operand_to_mem_or_a(cpu, mode, m.contents)
-    m.contents
+    let m = lsl(m, 1)
+    let m = lor(m, old_c)
+    write_operand_val(cpu, mode, m)
+    m
   }
   let ror = (cpu, mode) => {
-    let m = ref(get_operand_value_in_mem_or_a(cpu, mode))
+    let m = get_operand_val(cpu, mode)
     let old_c = cpu.c
-    cpu.c = if land(m.contents, 1) === 0 {
+    cpu.c = if land(m, 1) === 0 {
       0
     } else {
       1
     }
-    m := lsr(m.contents, 1)
-    m := lor(m.contents, lsl(old_c, 7))
-    write_operand_to_mem_or_a(cpu, mode, m.contents)
+    let m = lsr(m, 1)
+    let m = lor(m, lsl(old_c, 7))
+    write_operand_val(cpu, mode, m)
   }
   let rti = cpu => {
     let vector = stack_pop(cpu)
@@ -498,8 +480,11 @@ let get_operand_address = (cpu, mode) =>
   }
   let rla = (cpu, mode) => {
     let data = rol(cpu, mode)
-    cpu.register_a = land(cpu.register_a, data)
-    cpu->update_ZN(cpu.register_a)
+    cpu->set_register_a(land(cpu.register_a, data))
+  }
+  let sre = (cpu, mode) => {
+    let data = cpu->lsr_(mode)
+    cpu->logic_op_to_register_a(data, lxor)
   }
 )
 let step = (cpu, callback_list, break) => {
@@ -557,7 +542,8 @@ let step = (cpu, callback_list, break) => {
     | STA => sta(cpu, i.mode)
     | STX => stx(cpu, i.mode)
     | STY => sty(cpu, i.mode)
-    | LSR => lsr_(cpu, i.mode)
+    | LSR =>
+      let _ = lsr_(cpu, i.mode)
     | ORA => ora(cpu, i.mode)
     | PHA => stack_push(cpu, cpu.register_a)
     | PHP => php(cpu)
@@ -579,6 +565,7 @@ let step = (cpu, callback_list, break) => {
     | ISB => isb(cpu, i.mode)
     | SLO => slo(cpu, i.mode)
     | RLA => rla(cpu, i.mode)
+    | SRE => sre(cpu, i.mode)
     }
     switch cpu.jumped {
     | false => cpu.pc = cpu.pc + i.len - 1

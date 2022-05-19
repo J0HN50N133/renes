@@ -61,6 +61,7 @@ type opcode =
   | ISB
   | SLO
   | RLA
+  | SRE
 exception UnSupportedAddressingMode
 exception ErrorInstruction
 type addressing_mode =
@@ -141,6 +142,7 @@ let opcode_of_string = str =>
   | "*ISB" => ISB
   | "*SLO" => SLO
   | "*RLA" => RLA
+  | "*SRE" => SRE
   | _ => failwith("Unknown OpCode")
   }
 type instruction = {
@@ -405,6 +407,13 @@ let instruction_table = Belt.HashMap.fromArray(
     new(0x3B, "*RLA", 7, Absolute_Y),
     new(0x23, "*RLA", 8, Indirect_X),
     new(0x33, "*RLA", 8, Indirect_Y),
+    new(0x47, "*SRE", 5, ZeroPage),
+    new(0x57, "*SRE", 6, ZeroPage_X),
+    new(0x4F, "*SRE", 6, Absolute),
+    new(0x5F, "*SRE", 7, Absolute_X),
+    new(0x5B, "*SRE", 7, Absolute_Y),
+    new(0x43, "*SRE", 8, Indirect_X),
+    new(0x53, "*SRE", 8, Indirect_Y),
   ],
 )
 let string_of_opcode = instruction => instruction.str
