@@ -339,7 +339,9 @@ let get_operand_address = (cpu, mode) =>
   let inc = (cpu, mode) => {
     let addr = get_operand_address(cpu, mode)
     let m = mem_read(cpu, addr)
-    mem_write(cpu, addr, increase(cpu, m))
+    let m = increase(cpu, m)
+    mem_write(cpu, addr, m)
+    m
   }
   let inx = cpu => cpu.register_x = increase(cpu, cpu.register_x)
   let iny = cpu => cpu.register_y = increase(cpu, cpu.register_y)
@@ -402,6 +404,22 @@ let get_operand_address = (cpu, mode) =>
       cpu.c = 1
     }
     update_ZN(cpu, cpu.register_a->I8.sub(data))
+  }
+  let sub_from_register_a = (cpu, data) => {
+    add_to_register_a(cpu, data->I8.neg->I8.sub(1))
+  }
+  let isb = (cpu, mode) => {
+    let data = cpu->inc(mode)
+    sub_from_register_a(cpu, data)
+  }
+  let slo = (cpu, mode) => {
+    let addr = get_operand_address(cpu, mode)
+    let data = cpu->mem_read(addr)
+    let (data, carry) = data->I8.lsl_and_carry(1)
+    cpu.c = carry
+    cpu->mem_write(addr, data)
+    cpu.register_a = lor(cpu.register_a, data)
+    cpu->update_ZN(cpu.register_a)
   }
   let load_to = (cpu, addr, program) => {
     cpu.pc = addr
@@ -510,7 +528,8 @@ let step = (cpu, callback_list, break) => {
     | DEX => dex(cpu)
     | DEY => dey(cpu)
     | EOR => eor(cpu, i.mode)
-    | INC => inc(cpu, i.mode)
+    | INC =>
+      let _ = inc(cpu, i.mode)
     | INX => inx(cpu)
     | INY => iny(cpu)
     | JMP => jmp(cpu, i.mode)
@@ -550,6 +569,8 @@ let step = (cpu, callback_list, break) => {
     | LAX => lax(cpu, i.mode)
     | SAX => sax(cpu, i.mode)
     | DCP => dcp(cpu, i.mode)
+    | ISB => isb(cpu, i.mode)
+    | SLO => slo(cpu, i.mode)
     }
     switch cpu.jumped {
     | false => cpu.pc = cpu.pc + i.len - 1

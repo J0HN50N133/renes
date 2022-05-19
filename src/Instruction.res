@@ -58,6 +58,8 @@ type opcode =
   | LAX
   | SAX
   | DCP
+  | ISB
+  | SLO
 exception UnSupportedAddressingMode
 exception ErrorInstruction
 type addressing_mode =
@@ -135,6 +137,8 @@ let opcode_of_string = str =>
   | "*LAX" => LAX
   | "*SAX" => SAX
   | "*DCP" => DCP
+  | "*ISB" => ISB
+  | "*SLO" => SLO
   | _ => failwith("Unknown OpCode")
   }
 type instruction = {
@@ -378,6 +382,20 @@ let instruction_table = Belt.HashMap.fromArray(
     new(0xDB, "*DCP", 7, Absolute_Y),
     new(0xC3, "*DCP", 8, Indirect_X),
     new(0xD3, "*DCP", 8, Indirect_Y),
+    new(0xE7, "*ISB", 5, ZeroPage),
+    new(0xF7, "*ISB", 6, ZeroPage_X),
+    new(0xEF, "*ISB", 6, Absolute),
+    new(0xFF, "*ISB", 7, Absolute_X),
+    new(0xFB, "*ISB", 7, Absolute_Y),
+    new(0xE3, "*ISB", 8, Indirect_X),
+    new(0xF3, "*ISB", 8, Indirect_Y),
+    new(0x07, "*SLO", 5, ZeroPage),
+    new(0x17, "*SLO", 6, ZeroPage_X),
+    new(0x0F, "*SLO", 6, Absolute),
+    new(0x1F, "*SLO", 7, Absolute_X),
+    new(0x1B, "*SLO", 7, Absolute_Y),
+    new(0x03, "*SLO", 8, Indirect_X),
+    new(0x13, "*SLO", 8, Indirect_Y),
   ],
 )
 let string_of_opcode = instruction => instruction.str

@@ -19,6 +19,13 @@ module MakeInt = (I: MInt) => {
   let sub = (a, b) => {
     add(a, neg(b))
   }
+  let lsl_and_carry = (a, b) => {
+    let sa = a->lsl(b)
+    (sa->land(mask), sa->land(carry)->lsr(I.width))
+  }
+  let lsl = (a, b) => {
+    fst(lsl_and_carry(a, b))
+  }
 }
 module MI8: MInt = {
   let width = 8
