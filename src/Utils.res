@@ -27,11 +27,9 @@ module MakeInt = (I: MInt) => {
     fst(lsl_and_carry(a, b))
   }
 }
-module MI8: MInt = {
+module I8 = MakeInt({
   let width = 8
-}
-module MI16: MInt = {
+})
+module I16 = MakeInt({
   let width = 16
-}
-module I8 = MakeInt(MI8)
-module I16 = MakeInt(MI16)
+})
